@@ -7,15 +7,13 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.io.IOException;
@@ -23,20 +21,21 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 
-public class NameChooserActivity extends AppCompatActivity {
+public class NameChooserActivity extends AppCompatActivity implements View.OnClickListener{
+    private final int BUFFER_NAMES_SIZE = 9;
+    private final int SERVER_SIZE_BUFFER = 30;
     private final String DEBUG_TAG = "NameChooserMainActivity";
     private final String URL_SERVER_GET_DATA    = "http://server.bacmine.com/names/getNames.php";
     private final String URL_SERVER_SEND_DATA   = "http://server.bacmine.com/names/sendData.php";
     private TextView title;
     private ArrayList<String> listaNombres;
     Button[] buttons;
+    private int numberOfButtonsToChooseNames = 3;
+    private LinearLayout layoutButtons;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,12 +43,17 @@ public class NameChooserActivity extends AppCompatActivity {
         setContentView(R.layout.activity_name_chooser);
 
         title           = (TextView)findViewById(R.id.TextViewTitle);
-        listaNombres    = new ArrayList<String>(10);
-        buttons         = new Button[]{
-                (Button) findViewById(R.id.button1),
-                (Button) findViewById(R.id.button2),
-                (Button) findViewById(R.id.button3),
-        };
+        listaNombres    = new ArrayList<String>(SERVER_SIZE_BUFFER+BUFFER_NAMES_SIZE);
+        layoutButtons   = (LinearLayout)findViewById(R.id.linearLayoutButtons);
+        buttons         = new Button[numberOfButtonsToChooseNames];
+
+        for (int i=0; i<numberOfButtonsToChooseNames;i++){
+            Button b = new Button(getApplicationContext());
+            b.setOnClickListener(this);
+            layoutButtons.addView(b);
+            buttons[i] = b;
+        }
+
 
         checkConectivity();
 
@@ -103,19 +107,19 @@ public class NameChooserActivity extends AppCompatActivity {
 
 
     private void setNames(){
-        if(!listaNombres.isEmpty()){
+        if(listaNombres.size()>= numberOfButtonsToChooseNames){
             String[] names;
 
-            names = listaNombres.get(0).split(";");
+            //names = listaNombres.get(0).split(";");
 
-            for (int i=0; i<names.length;i++){
-                String[] tokens = names[i].split(":");
+            for (int i=0; i< numberOfButtonsToChooseNames;i++){
+                String[] tokens = listaNombres.get(0).split(":");
 
                 buttons[i].setTag(tokens[0]);
                 buttons[i].setText(tokens[1]);
-            }
 
-            listaNombres.remove(0);
+                listaNombres.remove(0);
+            }
 
         } else {
             try {
@@ -127,31 +131,6 @@ public class NameChooserActivity extends AppCompatActivity {
             }
         }
 
-    }
-
-
-    public void onButtonClick(View v){
-        String url;
-
-        Button buttonClicked = (Button)v;
-        ArrayList<Button> listaButtonsNotClicked = new ArrayList<Button>();
-
-        for (Button b : buttons){
-            if (!b.getText().equals(buttonClicked.getText())){
-                listaButtonsNotClicked.add(b);
-            }
-        }
-
-        url = URL_SERVER_SEND_DATA +
-                "?" +
-                "h=" + buttonClicked.getTag() +
-                "&n=" + listaButtonsNotClicked.get(0).getTag() +
-                ";" + listaButtonsNotClicked.get(1).getTag();
-
-        new SendDataToServer().execute(url);
-        new DownloadDataTask().execute(URL_SERVER_GET_DATA);
-
-        setNames();
     }
 
 
@@ -179,13 +158,40 @@ public class NameChooserActivity extends AppCompatActivity {
 
 
 
+    @Override
+    public void onClick(View v) {
+        String url;
+
+        Button buttonClicked = (Button)v;
+        ArrayList<Button> listaButtonsNotClicked = new ArrayList<Button>();
+
+        for (Button b : buttons){
+            if (!b.getText().equals(buttonClicked.getText())){
+                listaButtonsNotClicked.add(b);
+            }
+        }
+
+        url = URL_SERVER_SEND_DATA +
+                "?" +
+                "h=" + buttonClicked.getTag() +
+                "&n=" + listaButtonsNotClicked.get(0).getTag() +
+                ";" + listaButtonsNotClicked.get(1).getTag();
+
+        new SendDataToServer().execute(url);
+        new DownloadDataTask().execute(URL_SERVER_GET_DATA);
+
+        setNames();
+    }
+
 
     private class DownloadDataTask extends AsyncTask<String, Void, String> {
         protected String doInBackground(String... urls) {
-            while (listaNombres.size()<10) {
+            while (listaNombres.size()<BUFFER_NAMES_SIZE) {
                 try {
-                    for (String s : downloadUrl(urls[0]).split("\n")) {
-                        listaNombres.add(s);
+                    for (String s : downloadUrl(urls[0]).split(";")) {
+                        if (!listaNombres.contains(s)){
+                            listaNombres.add(s);
+                        }
                     }
                     Log.d(DEBUG_TAG, "Tamaño lista de nombres: " + listaNombres.size());
                 } catch (IOException e) {
@@ -230,7 +236,7 @@ public class NameChooserActivity extends AppCompatActivity {
 
         public String readIt(InputStream stream, int len) throws IOException, UnsupportedEncodingException {
             Reader reader = null;
-            reader = new InputStreamReader(stream, "UTF-8");
+            reader = new InputStreamReader(stream,"LATIN1");
             char[] buffer = new char[len];
             reader.read(buffer);
             return new String(buffer);
