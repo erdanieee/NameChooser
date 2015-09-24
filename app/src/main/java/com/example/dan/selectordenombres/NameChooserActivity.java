@@ -38,6 +38,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private final int BUFFER_NAMES_SIZE = 9;
     private final int SERVER_SIZE_BUFFER = 30;
     private final int DEFAULT_NUMBER_OF_BUTTONS = 3;
+    private final int DEFAULT_FREQUENCY_THRESHOLD = 10;
     private final String DEBUG_TAG = "NameChooserMainActivity";
     private final String URL_SERVER_GET_DATA    = "http://server.bacmine.com/names/getNames.php";
     private final String URL_SERVER_SEND_DATA   = "http://server.bacmine.com/names/sendData.php";
@@ -47,9 +48,10 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private LinearLayout layoutButtons;
     private String pref_userName;
     private int pref_numberOfButtons;
+    private int pref_freq;
     private String pref_sexo;
     private boolean pref_useFreq;
-    private int pref_freq;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,7 +110,9 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         pref_numberOfButtons    = sharedPref.getInt(getString(R.string.pref_numberOfButtons), DEFAULT_NUMBER_OF_BUTTONS);
         pref_userName           = sharedPref.getString(getString(R.string.pref_userName), "Yo");
-        //pref_sexo               = sharedPref.getString(getString(R.string.), "Yo");
+        pref_sexo               = sharedPref.getString(getString(R.string.pref_sexo), "H");
+        pref_useFreq            = sharedPref.getBoolean(getString(R.string.pref_useFreq), true);
+        pref_freq               = sharedPref.getInt(getString(R.string.pref_frequency), DEFAULT_FREQUENCY_THRESHOLD);
     }
 
 
@@ -239,6 +243,8 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                 createButtons();
                 setNames();
 
+                //TODO: comprobar si han cambiado otras preferencias y actualizar en consecuencia
+
                 break;
         }
 
@@ -267,7 +273,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                     "?" +
                     "clicked=" + buttonClicked.getTag() +
                     "&nonClicked=" + idsButtonsNotClicked.substring(0,idsButtonsNotClicked.length()-1) + //listaButtonsNotClicked.get(0).getTag() + ";" + listaButtonsNotClicked.get(1).getTag() +
-                    "&pref_userName=" + URLEncoder.encode(pref_userName, "LATIN1");
+                    "&pref_userName=" + URLEncoder.encode(pref_userName, "LATIN1"); //TODO: Añadir parámetros servidor: sexo, frecuencia y número de resultados
 
             new SendDataToServer().execute(url);
 
