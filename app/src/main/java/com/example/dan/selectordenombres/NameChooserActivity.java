@@ -3,18 +3,25 @@ package com.example.dan.selectordenombres;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,46 +30,54 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 
 public class NameChooserActivity extends AppCompatActivity implements View.OnClickListener{
+    private static final int INTENT_RESULT_SETTING = 1;
     private final int BUFFER_NAMES_SIZE = 9;
     private final int SERVER_SIZE_BUFFER = 30;
+    private final int DEFAULT_NUMBER_OF_BUTTONS = 3;
     private final String DEBUG_TAG = "NameChooserMainActivity";
     private final String URL_SERVER_GET_DATA    = "http://server.bacmine.com/names/getNames.php";
     private final String URL_SERVER_SEND_DATA   = "http://server.bacmine.com/names/sendData.php";
-    private TextView title;
+    private TextView textViewTitle;
     private ArrayList<String> listaNombres;
     Button[] buttons;
-    private int numberOfButtonsToChooseNames = 3;
     private LinearLayout layoutButtons;
+    private String pref_userName;
+    private int pref_numberOfButtons;
+    private String pref_sexo;
+    private boolean pref_useFreq;
+    private int pref_freq;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //getSupportActionBar().setTitle("Hola " + pref_userName);
         setContentView(R.layout.activity_name_chooser);
 
-        title           = (TextView)findViewById(R.id.TextViewTitle);
-        listaNombres    = new ArrayList<String>(SERVER_SIZE_BUFFER+BUFFER_NAMES_SIZE);
+        readPreferences();
+
+        textViewTitle   = (TextView)findViewById(R.id.TextViewTitle);
         layoutButtons   = (LinearLayout)findViewById(R.id.linearLayoutButtons);
-        buttons         = new Button[numberOfButtonsToChooseNames];
+        listaNombres    = new ArrayList<String>(SERVER_SIZE_BUFFER+BUFFER_NAMES_SIZE);
 
-        for (int i=0; i<numberOfButtonsToChooseNames;i++){
-            Button b = new Button(getApplicationContext());
-            b.setOnClickListener(this);
-            layoutButtons.addView(b);
-            buttons[i] = b;
+        createButtons();
+
+        if ( pref_userName == null ){
+            showInputDialog();
         }
-
 
         checkConectivity();
 
-
-
-
-
-        /*Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        setTitle(pref_userName);
+
+        textViewTitle.setText("Selecciona el nombre que más te gusta de entre los siguientes:");
+
+        /*
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -72,6 +87,59 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                         .setAction("Action", null).show();
             }
         });*/
+    }
+
+    private void createButtons() {
+        layoutButtons.removeAllViews();
+
+        buttons = new Button[pref_numberOfButtons];
+        for (int i=0; i< pref_numberOfButtons;i++){
+            Button b = new Button(getApplicationContext());
+            b.setOnClickListener(this);
+            layoutButtons.addView(b);
+            buttons[i] = b;
+        }
+    }
+
+    private void readPreferences() {
+        SharedPreferences sharedPref;
+
+        sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+
+        pref_numberOfButtons    = sharedPref.getInt(getString(R.string.pref_numberOfButtons), DEFAULT_NUMBER_OF_BUTTONS);
+        pref_userName           = sharedPref.getString(getString(R.string.pref_userName), "Yo");
+        //pref_sexo               = sharedPref.getString(getString(R.string.), "Yo");
+    }
+
+
+    protected void showInputDialog() {
+        LayoutInflater layoutInflater = LayoutInflater.from(this);
+        View promptView = layoutInflater.inflate(R.layout.input_dialog, null);
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setView(promptView);
+
+        final EditText editText = (EditText) promptView.findViewById(R.id.edittext);
+        // setup a dialog window
+        alertDialogBuilder.setCancelable(false)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        pref_userName = editText.getText().toString();
+                        SharedPreferences.Editor editor = getPreferences(Context.MODE_PRIVATE).edit();
+                        editor.putString(getString(R.string.pref_userName), pref_userName.substring(0, 1).toUpperCase() + pref_userName.substring(1));
+                        editor.commit();
+                        setTitle(pref_userName);
+                    }
+                })
+                .setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
+                            }
+                        });
+
+        // create an alert dialog
+        AlertDialog alert = alertDialogBuilder.create();
+        alert.show();
     }
 
 
@@ -107,12 +175,12 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
 
     private void setNames(){
-        if(listaNombres.size()>= numberOfButtonsToChooseNames){
+        if(listaNombres.size()>= pref_numberOfButtons){
             String[] names;
 
             //names = listaNombres.get(0).split(";");
 
-            for (int i=0; i< numberOfButtonsToChooseNames;i++){
+            for (int i=0; i< pref_numberOfButtons;i++){
                 String[] tokens = listaNombres.get(0).split(":");
 
                 buttons[i].setTag(tokens[0]);
@@ -150,6 +218,8 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent i = new Intent(this, SettingsActivity.class);
+            startActivityForResult(i, INTENT_RESULT_SETTING);
             return true;
         }
 
@@ -157,27 +227,54 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     }
 
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode) {
+            case INTENT_RESULT_SETTING:
+                readPreferences();
+
+                setTitle(pref_userName);
+                createButtons();
+                setNames();
+
+                break;
+        }
+
+    }
+
+
 
     @Override
     public void onClick(View v) {
+        Button buttonClicked;
         String url;
+        StringBuffer idsButtonsNotClicked;
 
-        Button buttonClicked = (Button)v;
-        ArrayList<Button> listaButtonsNotClicked = new ArrayList<Button>();
+
+        buttonClicked = (Button)v;
+        idsButtonsNotClicked = new StringBuffer();
 
         for (Button b : buttons){
             if (!b.getText().equals(buttonClicked.getText())){
-                listaButtonsNotClicked.add(b);
+                idsButtonsNotClicked.append(b.getTag() + ";");
             }
         }
 
-        url = URL_SERVER_SEND_DATA +
-                "?" +
-                "h=" + buttonClicked.getTag() +
-                "&n=" + listaButtonsNotClicked.get(0).getTag() +
-                ";" + listaButtonsNotClicked.get(1).getTag();
+        try {
+            url = URL_SERVER_SEND_DATA +
+                    "?" +
+                    "clicked=" + buttonClicked.getTag() +
+                    "&nonClicked=" + idsButtonsNotClicked.substring(0,idsButtonsNotClicked.length()-1) + //listaButtonsNotClicked.get(0).getTag() + ";" + listaButtonsNotClicked.get(1).getTag() +
+                    "&pref_userName=" + URLEncoder.encode(pref_userName, "LATIN1");
 
-        new SendDataToServer().execute(url);
+            new SendDataToServer().execute(url);
+
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
         new DownloadDataTask().execute(URL_SERVER_GET_DATA);
 
         setNames();
@@ -194,6 +291,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                         }
                     }
                     Log.d(DEBUG_TAG, "Tamaño lista de nombres: " + listaNombres.size());
+
                 } catch (IOException e) {
                     return "Unable to retrieve web page. URL may be invalid.";
                 }
@@ -254,7 +352,6 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         protected String doInBackground(String... urls) {
             try {
                 if(sendData(urls[0])){
-                    //Log.d(DEBUG_TAG, "Sending data: OK!");
                     return "OK";
                 }
 
@@ -262,6 +359,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                 e.printStackTrace();
             }
 
+            Toast.makeText(getApplicationContext(), "Error al enviar datos", Toast.LENGTH_LONG).show();
             return "BAD";
         }
 

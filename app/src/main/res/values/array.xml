@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array
+        name="sexo_nombre_label">
+        <item>Hombre</item>
+        <item>Mujer</item>
+    </array>
+    <array
+        name="sexo_nombre_value">
+        <item>H</item>
+        <item>M</item>
+    </array>
+</resources>

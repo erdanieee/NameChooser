@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">Selector de nombres</string>
     <string name="action_settings">Settings</string>
+    <string name="pref_userName">sp_userName</string>
+    <string name="pref_numberOfButtons">sp_numberOfButtons</string>
+    <string name="pref_sexo">pref_sexo</string>
+    <string name="pref_bufferNombres">pref_bufferNames</string>
+    <string name="pref_useFreq">pref_useFreq</string>
+    <string name="pref_frequency">pref_frequency</string>
 </resources>

@@ -1,0 +1,68 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ListPreference
+        android:key="@string/pref_sexo"
+        android:title="Sexo"
+        android:defaultValue="H"
+        android:entries="@array/sexo_nombre_label"
+        android:entryValues="@array/sexo_nombre_value"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null" />-->
+
+    <com.example.dan.selectordenombres.VNTNumberPickerPreference
+        xmlns:vntnumberpickerpreference="http://schemas.android.com/apk/res-auto"
+        android:defaultValue="20"
+        android:key="@string/pref_bufferNombres"
+        android:title="Buffer de nombres descargados"
+        vntnumberpickerpreference:maxValue="50"
+        vntnumberpickerpreference:minValue="10"
+        vntnumberpickerpreference:vnt_setWrapSelectorWheel="true"/>
+
+    <CheckBoxPreference
+        android:key="@string/pref_useFreq"
+        android:title="Usar frecuencia de corte"
+        android:defaultValue="true" />
+
+    <com.example.dan.selectordenombres.VNTNumberPickerPreference
+        xmlns:vntnumberpickerpreference="http://schemas.android.com/apk/res-auto"
+        android:defaultValue="10"
+        android:dependency="@string/pref_useFreq"
+        android:key="@string/pref_frequency"
+        android:title="Frecuencia máxima (%1000)"
+        vntnumberpickerpreference:maxValue="50"
+        vntnumberpickerpreference:minValue="1"
+        vntnumberpickerpreference:vnt_setWrapSelectorWheel="true"/>
+
+
+
+
+
+
+
+
+
+    <!--&lt;!&ndash; A 'parent' preference, which enables/disables child preferences (below)
+         when checked/unchecked. &ndash;&gt;
+    <CheckBoxPreference
+        android:key="notifications_new_message"
+        android:title="@string/pref_title_new_message_notifications"
+        android:defaultValue="true" />
+
+    &lt;!&ndash; Allows the user to choose a ringtone in the 'notification' category. &ndash;&gt;
+    &lt;!&ndash; NOTE: This preference will be enabled only when the checkbox above is checked. &ndash;&gt;
+    &lt;!&ndash; NOTE: RingtonePreference's summary should be set to its value by the activity code. &ndash;&gt;
+    <RingtonePreference
+        android:dependency="notifications_new_message"
+        android:key="notifications_new_message_ringtone"
+        android:title="@string/pref_title_ringtone"
+        android:ringtoneType="notification"
+        android:defaultValue="content://settings/system/notification_sound" />
+
+    &lt;!&ndash; NOTE: This preference will be enabled only when the checkbox above is checked. &ndash;&gt;
+    <CheckBoxPreference
+        android:dependency="notifications_new_message"
+        android:key="notifications_new_message_vibrate"
+        android:title="@string/pref_title_vibrate"
+        android:defaultValue="true" />-->
+
+</PreferenceScreen>
