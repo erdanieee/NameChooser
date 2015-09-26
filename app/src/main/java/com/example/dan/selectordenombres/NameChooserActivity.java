@@ -54,6 +54,8 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private boolean pref_useFreq;
 
 
+    //TODO: Compartir en facebook los resultados cuando se encuentre un nombre común entre la pareja.
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +73,9 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         updatePreferences();
         textViewTitle.setText("Selecciona el nombre que más te gusta de entre los siguientes:");
 
+
+        Intent i = new Intent(this, NewUserActivity.class);
+        startActivity(i);
 
 
         /*
