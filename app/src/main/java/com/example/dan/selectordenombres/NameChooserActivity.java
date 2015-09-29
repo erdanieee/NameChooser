@@ -32,10 +32,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class NameChooserActivity extends AppCompatActivity implements View.OnClickListener{
     private static final int INTENT_RESULT_SETTING = 99;
-    private final int BUFFER_NAMES_SIZE = 9;
+    private final int BUFFER_NAMES_SIZE = 50;
     private final int DEFAULT_NUMBER_OF_BUTTONS = 3;
     private final int DEFAULT_FREQUENCY_THRESHOLD = 10;
     private final String DEBUG_TAG = "NameChooserMainActivity";
@@ -52,6 +53,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private int     pref_serverBuffer;
     private String  pref_sexo;
     private boolean pref_useFreq;
+    private boolean pref_useCompoundNames;
 
 
     //TODO: Compartir en facebook los resultados cuando se encuentre un nombre común entre la pareja.
@@ -74,8 +76,8 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         textViewTitle.setText("Selecciona el nombre que más te gusta de entre los siguientes:");
 
 
-        Intent i = new Intent(this, NewUserActivity.class);
-        startActivity(i);
+        /*Intent i = new Intent(this, NewUserActivity.class);
+        startActivity(i);*/
 
 
         /*
@@ -98,9 +100,11 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         networkInfo = connMgr.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnected()) {
+            Log.d(DEBUG_TAG, "Conectivity OK!");
             return true;
 
         } else {
+            Log.d(DEBUG_TAG, "Fallo de conexión");
             new AlertDialog.Builder(getApplicationContext())
                     .setTitle("Conectividad")
                     .setMessage("No se ha podido establecer la conexión con el servidor.")
@@ -111,6 +115,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                     })
                     .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
+                            Log.d(DEBUG_TAG, "Dialogo de conexión cancelado");
                             // do nothing
                         }
                     })
@@ -127,7 +132,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         SharedPreferences sharedPref;
         int new_numberOfButtons, new_freq, new_bufferName;
         String new_userName, new_sexo;
-        boolean new_useFreq;
+        boolean new_useFreq, new_multiNames;
 
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -137,15 +142,37 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         new_userName        = sharedPref.getString(getString(R.string.pref_userName), null);
         new_sexo            = sharedPref.getString(getString(R.string.pref_sexo), "H");
         new_useFreq         = sharedPref.getBoolean(getString(R.string.pref_useFreq), true);
+        new_multiNames      = sharedPref.getBoolean(getString(R.string.pref_useCompoundNames), false);
 
 
-        if(new_bufferName!=pref_serverBuffer){ pref_serverBuffer = new_bufferName; }
+        if(new_bufferName!=pref_serverBuffer){
+            pref_serverBuffer = new_bufferName;
+            Log.d(DEBUG_TAG, "New pref buffer: " + pref_serverBuffer);
+        }
 
-        if(new_freq!=pref_freq){ pref_freq = new_freq; }
+        if(new_freq!=pref_freq){
+            pref_freq = new_freq;
+            bufferNombres.clear();
+            Log.d(DEBUG_TAG, "New pref freq: " + pref_freq);
+        }
 
-        if(new_sexo!=pref_sexo){ pref_sexo = new_sexo; }
+        if(new_sexo!=pref_sexo){
+            pref_sexo = new_sexo;
+            bufferNombres.clear();
+            Log.d(DEBUG_TAG, "New pref sexo: " + pref_sexo);
+        }
 
-        if(new_useFreq!=pref_useFreq){ pref_useFreq = new_useFreq; }
+        if(new_useFreq!=pref_useFreq){
+            pref_useFreq = new_useFreq;
+            bufferNombres.clear();
+            Log.d(DEBUG_TAG, "New pref use freq: " + pref_useFreq);
+        }
+
+        if(new_multiNames!=pref_useCompoundNames){
+            pref_useCompoundNames = new_multiNames;
+            bufferNombres.clear();
+            Log.d(DEBUG_TAG, "New pref compound names: " + pref_useCompoundNames);
+        }
 
         if(new_userName==null || new_userName.equals("")){
             showInputDialog();
@@ -153,18 +180,22 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         } else if(new_userName!=pref_userName){
             pref_userName = new_userName;
             setTitle(pref_userName);
+            Log.d(DEBUG_TAG, "New pref user name: " + pref_userName);
         }
 
         if(new_numberOfButtons!=pref_numberOfButtons){
             pref_numberOfButtons = new_numberOfButtons;
             createButtons();
-            downloadData();
-            setNames();
+            Log.d(DEBUG_TAG, "New pref number of buttons: " + pref_numberOfButtons);
         }
+
+        downloadData();
+        setNames();
     }
 
 
     private void createButtons() {
+        Log.d(DEBUG_TAG, "Create buttons");
         layoutButtons.removeAllViews();
 
         buttons = new Button[pref_numberOfButtons];
@@ -189,8 +220,9 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         pref_userName = editText.getText().toString();
-                        SharedPreferences.Editor editor = getPreferences(Context.MODE_PRIVATE).edit();
-                        editor.putString(getString(R.string.pref_userName), pref_userName.substring(0, 1).toUpperCase() + pref_userName.substring(1));
+
+                        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
+                        editor.putString(getString(R.string.pref_userName), pref_userName);
                         editor.commit();
                         updatePreferences();
                     }
@@ -199,6 +231,10 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 dialog.cancel();
+                                Intent homeIntent = new Intent(Intent.ACTION_MAIN);
+                                homeIntent.addCategory(Intent.CATEGORY_HOME);
+                                homeIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                startActivity(homeIntent);
                             }
                         });
 
@@ -209,23 +245,36 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
 
     private void setNames(){
+        for (Button b : buttons){
+            b.setEnabled(false);
+        }
+
+        bufferNombres.trimToSize();
         if(bufferNombres.size()>= pref_numberOfButtons){
             String[] names;
 
             //names = bufferNombres.get(0).split(";");
 
-            for (int i=0; i< pref_numberOfButtons;i++){
-                String[] tokens = bufferNombres.get(0).split(":");
+            synchronized (this) {
+                for (int i = 0; i < pref_numberOfButtons; i++) {
+                    String[] tokens;
 
-                buttons[i].setTag(tokens[0]);
-                buttons[i].setText(tokens[1]);
+                    tokens = bufferNombres.get(0).split(":");
+                    bufferNombres.remove(0);
 
-                bufferNombres.remove(0);
+                    Log.d(DEBUG_TAG, "Set names: " + bufferNombres.get(0) + " (" + Arrays.toString(tokens) + ")");
+
+                    buttons[i].setTag(tokens[0]);
+                    buttons[i].setText(tokens[1]);
+                }
+            }
+            for (Button b : buttons){
+                b.setEnabled(true);
             }
 
         } else {
             try {
-                Thread.sleep(100);
+                Thread.sleep(50);
                 setNames();
 
             } catch (Exception e){
@@ -287,9 +336,9 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
     @Override
     public void onClick(View v) {
+        setNames();
         sendData((Button)v);
         downloadData();
-        setNames();
     }
 
 
@@ -299,25 +348,27 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         url = URL_SERVER_GET_DATA +
                 "?buffer=" + pref_serverBuffer +
                 "&sexo=" + pref_sexo +
+                (pref_useCompoundNames==true? "&multiName=1":"") +
                 (pref_useFreq?"&freq="+pref_freq:"");
 
+        Log.d(DEBUG_TAG, "Download url: " + url);
         new DownloadDataTask().execute(url);
     }
 
 
     private class DownloadDataTask extends AsyncTask<String, Void, String> {
         protected String doInBackground(String... urls) {
-            while (bufferNombres.size()<BUFFER_NAMES_SIZE) {
-                try {
-                    for (String s : downloadUrl(urls[0]).split(";")) {
-                        if (!bufferNombres.contains(s)){
+            synchronized (this) {
+                while (bufferNombres.size()<BUFFER_NAMES_SIZE) {
+                    try {
+                        for (String s : downloadUrl(urls[0]).split(";")) {
                             bufferNombres.add(s);
                         }
-                    }
-                    Log.d(DEBUG_TAG, "Tamaño lista de nombres: " + bufferNombres.size());
+                        Log.d(DEBUG_TAG, "Tamaño lista de nombres: " + bufferNombres.size());
 
-                } catch (IOException e) {
-                    return "Unable to retrieve web page. URL may be invalid.";
+                    } catch (IOException e) {
+                        return "Unable to retrieve web page. URL may be invalid.";
+                    }
                 }
             }
 
@@ -328,7 +379,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             InputStream is = null;
             // Only display the first 500 characters of the retrieved
             // web page content.
-            int len = 500;
+            int len = 5000;
 
             try {
                 URL url = new URL(myurl);
@@ -340,11 +391,12 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                 // Starts the query
                 conn.connect();
                 int response = conn.getResponseCode();
-                Log.d(DEBUG_TAG, "Download data: " + response);
                 is = conn.getInputStream();
 
                 // Convert the InputStream into a string
-                String contentAsString = readIt(is, len);
+                String contentAsString = readIt(is, len).trim();
+                Log.d(DEBUG_TAG, contentAsString);
+                Log.d(DEBUG_TAG, "Download data: " + response);
                 return contentAsString;
 
                 // Makes sure that the InputStream is closed after the app is
@@ -391,6 +443,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                     "&nonClicked=" + idsButtonsNotClicked.substring(0,idsButtonsNotClicked.length()-1) +
                     "&userName=" + URLEncoder.encode(pref_userName, "LATIN1");
 
+            Log.d(DEBUG_TAG, "Send url: " + url);
             new SendDataToServer().execute(url);
 
         } catch (UnsupportedEncodingException e) {

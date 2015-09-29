@@ -11,12 +11,17 @@
 
     <com.example.dan.selectordenombres.VNTNumberPickerPreference
         xmlns:vntnumberpickerpreference="http://schemas.android.com/apk/res-auto"
-        android:defaultValue="20"
+        android:defaultValue="50"
         android:key="@string/pref_bufferNombres"
         android:title="Buffer de nombres descargados"
-        vntnumberpickerpreference:maxValue="50"
+        vntnumberpickerpreference:maxValue="100"
         vntnumberpickerpreference:minValue="10"
         vntnumberpickerpreference:vnt_setWrapSelectorWheel="true"/>
+
+    <CheckBoxPreference
+        android:key="@string/pref_useCompoundNames"
+        android:title="Incluir nombres compuestos"
+        android:defaultValue="false" />
 
     <CheckBoxPreference
         android:key="@string/pref_useFreq"
