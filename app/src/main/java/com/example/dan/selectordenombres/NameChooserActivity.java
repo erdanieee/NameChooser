@@ -14,14 +14,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,7 +37,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private static final int INTENT_RESULT_SETTING = 99;
     private final int BUFFER_NAMES_SIZE = 50;
     private final int DEFAULT_NUMBER_OF_BUTTONS = 3;
-    private final int DEFAULT_FREQUENCY_THRESHOLD = 10;
+    private final int DEFAULT_MAX_FREQ_THRESHOLD = 10;
     private final String DEBUG_TAG = "NameChooserMainActivity";
     private final String URL_SERVER_GET_DATA    = "http://server.bacmine.com/names/getNames.php";
     private final String URL_SERVER_SEND_DATA   = "http://server.bacmine.com/names/sendData.php";
@@ -49,10 +48,10 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
     private String  pref_userName;
     private int     pref_numberOfButtons;
-    private int     pref_freq;
+    private int     pref_freqMax;
     private int     pref_serverBuffer;
     private String  pref_sexo;
-    private boolean pref_useFreq;
+    private boolean pref_useFreqMax;
     private boolean pref_useCompoundNames;
 
 
@@ -130,14 +129,14 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
     private void updatePreferences() {
         SharedPreferences sharedPref;
-        int new_numberOfButtons, new_freq, new_bufferName;
+        int new_numberOfButtons, new_freqMax, new_bufferName;
         String new_userName, new_sexo;
         boolean new_useFreq, new_multiNames;
 
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 
         new_numberOfButtons = sharedPref.getInt(getString(R.string.pref_numberOfButtons), DEFAULT_NUMBER_OF_BUTTONS);
-        new_freq            = sharedPref.getInt(getString(R.string.pref_frequency), DEFAULT_FREQUENCY_THRESHOLD);
+        new_freqMax         = sharedPref.getInt(getString(R.string.pref_freqMax), DEFAULT_MAX_FREQ_THRESHOLD);
         new_bufferName      = sharedPref.getInt(getString(R.string.pref_bufferNombres), 20);
         new_userName        = sharedPref.getString(getString(R.string.pref_userName), null);
         new_sexo            = sharedPref.getString(getString(R.string.pref_sexo), "H");
@@ -150,10 +149,10 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             Log.d(DEBUG_TAG, "New pref buffer: " + pref_serverBuffer);
         }
 
-        if(new_freq!=pref_freq){
-            pref_freq = new_freq;
+        if(new_freqMax!= pref_freqMax){
+            pref_freqMax = new_freqMax;
             bufferNombres.clear();
-            Log.d(DEBUG_TAG, "New pref freq: " + pref_freq);
+            Log.d(DEBUG_TAG, "New pref freq: " + pref_freqMax);
         }
 
         if(new_sexo!=pref_sexo){
@@ -162,10 +161,10 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             Log.d(DEBUG_TAG, "New pref sexo: " + pref_sexo);
         }
 
-        if(new_useFreq!=pref_useFreq){
-            pref_useFreq = new_useFreq;
+        if(new_useFreq!= pref_useFreqMax){
+            pref_useFreqMax = new_useFreq;
             bufferNombres.clear();
-            Log.d(DEBUG_TAG, "New pref use freq: " + pref_useFreq);
+            Log.d(DEBUG_TAG, "New pref use freq: " + pref_useFreqMax);
         }
 
         if(new_multiNames!=pref_useCompoundNames){
@@ -337,7 +336,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     @Override
     public void onClick(View v) {
         setNames();
-        sendData((Button)v);
+        sendData((Button) v);
         downloadData();
     }
 
@@ -349,7 +348,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                 "?buffer=" + pref_serverBuffer +
                 "&sexo=" + pref_sexo +
                 (pref_useCompoundNames==true? "&multiName=1":"") +
-                (pref_useFreq?"&freq="+pref_freq:"");
+                (pref_useFreqMax ?"&freqMax="+ pref_freqMax :"");
 
         Log.d(DEBUG_TAG, "Download url: " + url);
         new DownloadDataTask().execute(url);

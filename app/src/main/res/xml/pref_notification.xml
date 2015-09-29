@@ -32,7 +32,7 @@
         xmlns:vntnumberpickerpreference="http://schemas.android.com/apk/res-auto"
         android:defaultValue="10"
         android:dependency="@string/pref_useFreq"
-        android:key="@string/pref_frequency"
+        android:key="@string/pref_freqMax"
         android:title="Frecuencia máxima (%1000)"
         vntnumberpickerpreference:maxValue="50"
         vntnumberpickerpreference:minValue="1"
