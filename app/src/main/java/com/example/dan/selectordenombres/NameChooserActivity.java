@@ -32,6 +32,9 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 public class NameChooserActivity extends AppCompatActivity implements View.OnClickListener{
     private static final int INTENT_RESULT_SETTING = 99;
@@ -44,7 +47,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     public static final String URL_SERVER_GET_DATA    = "http://server.bacmine.com/names/getNames.php";
     public static final String URL_SERVER_SEND_DATA   = "http://server.bacmine.com/names/sendData.php";
     private TextView textViewTitle;
-    private ArrayList<String> bufferNombres;
+    private List<String> bufferNombres;
     Button[] buttons;
     private LinearLayout layoutButtons;
 
@@ -69,7 +72,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         textViewTitle   = (TextView)findViewById(R.id.TextViewTitle);
         layoutButtons   = (LinearLayout)findViewById(R.id.linearLayoutButtons);
-        bufferNombres   = new ArrayList<String>(pref_serverBuffer +BUFFER_NAMES_SIZE);
+        bufferNombres   = Collections.synchronizedList(new ArrayList<String>(pref_serverBuffer + BUFFER_NAMES_SIZE));
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
         setSupportActionBar(toolbar);
@@ -266,25 +269,34 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             b.setEnabled(false);
         }
 
-        bufferNombres.trimToSize();
+        //bufferNombres.trimToSize();
         if(bufferNombres.size()>= pref_numberOfButtons){
             String[] names;
+            String[] tokens;
 
             //names = bufferNombres.get(0).split(";");
 
-            synchronized (this) {
-                for (int i = 0; i < pref_numberOfButtons; i++) {
-                    String[] tokens;
+            int i=0;
 
-                    tokens = bufferNombres.get(0).split(":");
-                    bufferNombres.remove(0);
+            synchronized (bufferNombres) {
+                Iterator<String> it = bufferNombres.iterator();
+                while(it.hasNext() && i < pref_numberOfButtons){
+                    tokens = it.next().split(":");
+                    Log.d(DEBUG_TAG, "Set names: " + Arrays.toString(tokens));
 
-                    Log.d(DEBUG_TAG, "Set names: " + bufferNombres.get(0) + " (" + Arrays.toString(tokens) + ")");
+                    it.remove();
 
-                    buttons[i].setTag(tokens[0]);
-                    buttons[i].setText(tokens[1]);
+                    if(tokens.length==2){
+                        buttons[i].setTag(tokens[0]);
+                        buttons[i].setText(tokens[1]);
+                        i++;
+
+                    } else {
+                        Log.e(DEBUG_TAG, "Error al partir el nombre del servidor");
+                    }
                 }
             }
+
             for (Button b : buttons){
                 b.setEnabled(true);
             }
@@ -377,17 +389,15 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
     protected class DownloadDataTask extends AsyncTask<String, Void, String> {
         protected String doInBackground(String... urls) {
-            synchronized (this) {
-                while (bufferNombres.size()<BUFFER_NAMES_SIZE) {
-                    try {
-                        for (String s : downloadUrl(urls[0]).split(";")) {
-                            bufferNombres.add(s);
-                        }
-                        Log.d(DEBUG_TAG, "Tamaño lista de nombres: " + bufferNombres.size());
-
-                    } catch (IOException e) {
-                        return "Unable to retrieve web page. URL may be invalid.";
+            while (bufferNombres.size()<BUFFER_NAMES_SIZE) {
+                try {
+                    for (String s : downloadUrl(urls[0]).split(";")) {
+                        bufferNombres.add(s);
                     }
+                    Log.d(DEBUG_TAG, "Tamaño lista de nombres: " + bufferNombres.size());
+
+                } catch (IOException e) {
+                    return "Unable to retrieve web page. URL may be invalid.";
                 }
             }
 
