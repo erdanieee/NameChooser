@@ -10,4 +10,14 @@
         <item>H</item>
         <item>M</item>
     </array>
+    <array
+        name="freq_min_array">
+        <item>0.01</item>
+        <item></item>
+        <item></item>
+        <item></item>
+        <item></item>
+        <item></item>
+        <item></item>
+    </array>
 </resources>

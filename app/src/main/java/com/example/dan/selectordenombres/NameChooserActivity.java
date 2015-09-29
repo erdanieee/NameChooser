@@ -38,6 +38,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private final int BUFFER_NAMES_SIZE = 50;
     private final int DEFAULT_NUMBER_OF_BUTTONS = 3;
     private final int DEFAULT_MAX_FREQ_THRESHOLD = 10;
+    private final int DEFAULT_MIN_FREQ_THRESHOLD = 50;
     private final String DEBUG_TAG = "NameChooserMainActivity";
     private final String URL_SERVER_GET_DATA    = "http://server.bacmine.com/names/getNames.php";
     private final String URL_SERVER_SEND_DATA   = "http://server.bacmine.com/names/sendData.php";
@@ -49,9 +50,10 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private String  pref_userName;
     private int     pref_numberOfButtons;
     private int     pref_freqMax;
+    private float   pref_freqMin;
     private int     pref_serverBuffer;
     private String  pref_sexo;
-    private boolean pref_useFreqMax;
+    private boolean pref_useFreq;
     private boolean pref_useCompoundNames;
 
 
@@ -129,7 +131,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
     private void updatePreferences() {
         SharedPreferences sharedPref;
-        int new_numberOfButtons, new_freqMax, new_bufferName;
+        int new_numberOfButtons, new_freqMax, new_freqMin, new_bufferName;
         String new_userName, new_sexo;
         boolean new_useFreq, new_multiNames;
 
@@ -137,6 +139,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         new_numberOfButtons = sharedPref.getInt(getString(R.string.pref_numberOfButtons), DEFAULT_NUMBER_OF_BUTTONS);
         new_freqMax         = sharedPref.getInt(getString(R.string.pref_freqMax), DEFAULT_MAX_FREQ_THRESHOLD);
+        new_freqMin         = sharedPref.getInt(getString(R.string.pref_freqMin), DEFAULT_MIN_FREQ_THRESHOLD);
         new_bufferName      = sharedPref.getInt(getString(R.string.pref_bufferNombres), 20);
         new_userName        = sharedPref.getString(getString(R.string.pref_userName), null);
         new_sexo            = sharedPref.getString(getString(R.string.pref_sexo), "H");
@@ -152,7 +155,13 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         if(new_freqMax!= pref_freqMax){
             pref_freqMax = new_freqMax;
             bufferNombres.clear();
-            Log.d(DEBUG_TAG, "New pref freq: " + pref_freqMax);
+            Log.d(DEBUG_TAG, "New pref freq max: " + pref_freqMax);
+        }
+
+        if(new_freqMin!= pref_freqMin){
+            pref_freqMin = (float)new_freqMin/100;
+            bufferNombres.clear();
+            Log.d(DEBUG_TAG, "New pref freq min: " + pref_freqMin);
         }
 
         if(new_sexo!=pref_sexo){
@@ -161,10 +170,10 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             Log.d(DEBUG_TAG, "New pref sexo: " + pref_sexo);
         }
 
-        if(new_useFreq!= pref_useFreqMax){
-            pref_useFreqMax = new_useFreq;
+        if(new_useFreq!= pref_useFreq){
+            pref_useFreq = new_useFreq;
             bufferNombres.clear();
-            Log.d(DEBUG_TAG, "New pref use freq: " + pref_useFreqMax);
+            Log.d(DEBUG_TAG, "New pref use freq: " + pref_useFreq);
         }
 
         if(new_multiNames!=pref_useCompoundNames){
@@ -348,7 +357,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                 "?buffer=" + pref_serverBuffer +
                 "&sexo=" + pref_sexo +
                 (pref_useCompoundNames==true? "&multiName=1":"") +
-                (pref_useFreqMax ?"&freqMax="+ pref_freqMax :"");
+                (pref_useFreq ?"&freqMax="+ pref_freqMax + "&freqMin="+ pref_freqMin :"");
 
         Log.d(DEBUG_TAG, "Download url: " + url);
         new DownloadDataTask().execute(url);

@@ -10,4 +10,6 @@
     <string name="title_activity_new_user">NewUserActivity</string>
     <string name="section_format">Hello World from section: %1$d</string>
     <string name="pref_useCompoundNames">pref_includeCompoundNames</string>
+    <string name="pref_useFreqMin">pref_useFreqMin</string>
+    <string name="pref_freqMin">pref_freqMin</string>
 </resources>

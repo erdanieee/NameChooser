@@ -182,6 +182,7 @@ public class SettingsActivity extends PreferenceActivity {
             bindPreferenceSummaryStringToValue(findPreference(getResources().getString(R.string.pref_sexo)));
             bindPreferenceSummaryIntToValue(findPreference(getResources().getString(R.string.pref_bufferNombres)));
             bindPreferenceSummaryIntToValue(findPreference(getResources().getString(R.string.pref_freqMax)));
+            bindPreferenceSummaryIntToValue(findPreference(getResources().getString(R.string.pref_freqMin)));
         }
     }
 
