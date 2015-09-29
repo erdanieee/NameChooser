@@ -1,0 +1,9 @@
+*.log
+.DS_Store
+.DS_Store?
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.backup
+*.old
+*.swp

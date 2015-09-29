@@ -1,42 +1,43 @@
 <?php
 
-//if (){
-
-//} else {
-
-//}
-
-$SQL_LIMIT    = ( isset($_GET["buffer"]) && is_numeric($_GET["buffer"]) ) ? ((int)$_GET["buffer"]) : 50;
-$SQL_FREQ_MAX = ( isset($_GET["freq"]) && is_numeric($_GET["freq"]) ) ? ((int)$_GET["freq"]) : 10; 
+$SQL_LIMIT    = ( isset($_GET["buffer"]) && is_numeric($_GET["buffer"]) ) 	 ? ((int)$_GET["buffer"]) : 50;
+$SQL_FREQ_MAX = ( isset($_GET["freq"]) && is_numeric($_GET["freq"]) ) 		 ? ((float)$_GET["freq"]) : 10; 
+$SQL_FREQ_MIN = ( isset($_GET["freqMin"]) && is_numeric($_GET["freqMin"]) ) 	 ? ((float)$_GET["freqMin"]) : 0.05;
 $SQL_SEXO     = ( isset($_GET["sexo"]) && preg_match('/^[HM]$/',$_GET["sexo"]) ) ? "'".$_GET["sexo"]."'" : "'H'";
 $SQL_COMP_NAM = ( isset($_GET["multiName"]) ) ? "" : " AND nombre not like '% %' "; 
 
+$mysqli=new mysqli("localhost","names","como1cerda=)","names") or die('Could not connect to the database server' . $mysqli->connect_error);
 
-$mysqli=new mysqli("localhost","names","como1cerda=)","names");
+$string= 'No results found!';
+$query = "SELECT id,nombre FROM nombres where sexo like $SQL_SEXO and frecuencia>=$SQL_FREQ_MIN and frecuencia <=$SQL_FREQ_MAX $SQL_COMP_NAM order by RAND() limit $SQL_LIMIT";
 
-//var_dump($mysqli->get_charset());
+//echo $query;
+if ($stmt = $mysqli->prepare($query)) {
+	$stmt->execute();
+    	$stmt->bind_result($id, $nombre);
 
-$string = 'No results found!';
-if ($mysqli->connect_errno) {
-    printf("Connect failed: %s\n", $mysqli->connect_error);
-    exit();
+	$string='';
+    	while ($stmt->fetch()) {
+        	$string .= $id .  ":" . $nombre . ";";
+    	}
+    	$stmt->close();
 
 } else {
-	$query = "SELECT id,nombre FROM nombres where sexo like $SQL_SEXO and frecuencia>=0.05 and frecuencia <=$SQL_FREQ_MAX $SQL_COMP_NAM order by RAND() limit $SQL_LIMIT";
-	//error_log(print_r($query, TRUE)); 
-
-	if ($result = $mysqli->query($query)) {
-		$i = 1;
-		$string = '';
-		while ($row = $result->fetch_assoc()){			
-			$string .= $row["id"] .  ":" . $row["nombre"] . ";"; 
-		}
-		$result->free();
-	}
-	$mysqli->close();
-
-	header("Content-Type: plain/text");
-	$content = substr($string,0,-1);
-	echo htmlspecialchars($content);
+	echo "Error en la query " . $mysqli->connect_error;
+	http_response_code(400);
+	exit();
 }
+
+$mysqli->close();
+$content='';
+
+header("Content-Type: plain/text");
+if(strlen($string)>2){
+	$content = substr($string,0,-1);
+
+} else {
+	$content = 'No result founds!';
+//	http_response_code(500);
+}
+echo htmlspecialchars($content);
 ?>
