@@ -19,14 +19,22 @@
         vntnumberpickerpreference:vnt_setWrapSelectorWheel="true"/>
 
     <CheckBoxPreference
+        android:key="@string/pref_filtrarNombres"
+        android:title="Filtrar nombres"
+        android:defaultValue="true" />
+
+
+    <CheckBoxPreference
         android:key="@string/pref_useCompoundNames"
+        android:dependency="@string/pref_filtrarNombres"
         android:title="Incluir nombres compuestos"
-        android:defaultValue="false" />
+        android:defaultValue="true" />
 
 
 
     <CheckBoxPreference
         android:key="@string/pref_useFreq"
+        android:dependency="@string/pref_filtrarNombres"
         android:title="Filtrar nombres por frecuencia"
         android:defaultValue="true" />
 

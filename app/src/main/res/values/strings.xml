@@ -12,4 +12,5 @@
     <string name="pref_useCompoundNames">pref_includeCompoundNames</string>
     <string name="pref_useFreqMin">pref_useFreqMin</string>
     <string name="pref_freqMin">pref_freqMin</string>
+    <string name="pref_filtrarNombres">pref_filterNames</string>
 </resources>
