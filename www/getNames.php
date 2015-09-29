@@ -1,8 +1,8 @@
 <?php
 
 $SQL_LIMIT    = ( isset($_GET["buffer"]) && is_numeric($_GET["buffer"]) ) 	 ? ((int)$_GET["buffer"]) : 50;
-$SQL_FREQ_MAX = ( isset($_GET["freqMax"]) && is_numeric($_GET["freqMax"]) )	 ? ((float)$_GET["freqMax"]) : 10; 
-$SQL_FREQ_MIN = ( isset($_GET["freqMin"]) && is_numeric($_GET["freqMin"]) ) 	 ? ((float)$_GET["freqMin"]) : 0.05;
+$SQL_FREQ_MAX = ( isset($_GET["freqMax"]) && is_numeric($_GET["freqMax"]) )	 ? ((float)$_GET["freqMax"]) : 999; 
+$SQL_FREQ_MIN = ( isset($_GET["freqMin"]) && is_numeric($_GET["freqMin"]) ) 	 ? ((float)$_GET["freqMin"]) : 0;
 $SQL_SEXO     = ( isset($_GET["sexo"]) && preg_match('/^[HM]$/',$_GET["sexo"]) ) ? "'".$_GET["sexo"]."'" : "'H'";
 $SQL_COMP_NAM = ( isset($_GET["multiName"]) ) ? "" : " AND nombre not like '% %' ";
 $SQL_COUNT    = ( isset($_GET["count"]) ) ? true : false;
