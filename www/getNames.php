@@ -1,4 +1,7 @@
 <?php
+//TODO:seleccionar 100 nombres votados, 25 del total y barajar
+//TODO: eliminar tamaño del buffer (dejarlo solo en la parte del servidor)
+
 
 $SQL_LIMIT    = ( isset($_GET["buffer"]) && is_numeric($_GET["buffer"]) ) 	 ? ((int)$_GET["buffer"]) : 50;
 $SQL_FREQ_MAX = ( isset($_GET["freqMax"]) && is_numeric($_GET["freqMax"]) )	 ? ((float)$_GET["freqMax"]) : 999; 

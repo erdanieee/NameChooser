@@ -63,6 +63,9 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
 
     //TODO: Compartir en facebook los resultados cuando se encuentre un nombre común entre la pareja.
+    //TODO: añadir opción para borrar estadísticas (borrar solo hombres, mujeres o ambos)
+    //TODO: no emviar nombres no votados
+    //TODO: página inicial de configuración
 
 
     @Override
