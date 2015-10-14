@@ -460,19 +460,10 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
     private void sendData(Button buttonClicked){
         String url;
-        StringBuffer idsButtonsNotClicked;
-
-        idsButtonsNotClicked = new StringBuffer();
-        for (Button b : buttons){
-            if (!b.getText().equals(buttonClicked.getText())){
-                idsButtonsNotClicked.append(b.getTag() + ";");
-            }
-        }
 
         try {
             url = URL_SERVER_SEND_DATA +
                     "?clicked=" + buttonClicked.getTag() +
-                    "&nonClicked=" + idsButtonsNotClicked.substring(0,idsButtonsNotClicked.length()-1) +
                     "&userName=" + URLEncoder.encode(pref_userName, "LATIN1");
 
             Log.d(DEBUG_TAG, "Send url: " + url);
