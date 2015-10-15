@@ -25,7 +25,7 @@ $query = "";
 if (){
 	$query = "SELECT COUNT(id) as id FROM nombres where sexo like $SQL_SEXO and frecuencia>=$SQL_FREQ_MIN and frecuencia <=$SQL_FREQ_MAX $SQL_COMP_NAM";
 } else {
-	//TODO: $query = "";
+	$query = "";
 }
 
 //echo $query;
