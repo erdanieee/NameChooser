@@ -38,11 +38,10 @@ import java.util.List;
 
 public class NameChooserActivity extends AppCompatActivity implements View.OnClickListener{
     private static final int INTENT_RESULT_SETTING = 99;
-    private final int BUFFER_NAMES_SIZE = 50;
+    private final int BUFFER_NAMES_SIZE = 25;
     private final int DEFAULT_NUMBER_OF_BUTTONS = 3;
     private final int DEFAULT_MAX_FREQ_THRESHOLD = 10;
     private final int DEFAULT_MIN_FREQ_THRESHOLD = 50;
-    private final int DEFAULT_BUFFER_SERVER = 20;
     private final String DEBUG_TAG = "NameChooserMainActivity";
     public static final String URL_SERVER_GET_DATA    = "http://server.bacmine.com/names/getNames.php";
     public static final String URL_SERVER_SEND_DATA   = "http://server.bacmine.com/names/sendData.php";
@@ -55,7 +54,6 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private int     pref_numberOfButtons;
     private int     pref_freqMax;
     private float   pref_freqMin;
-    private int     pref_serverBuffer;
     private String  pref_sexo;
     private boolean pref_useFreq;
     private boolean pref_useCompoundNames;
@@ -64,7 +62,6 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
     //TODO: Compartir en facebook los resultados cuando se encuentre un nombre común entre la pareja.
     //TODO: añadir opción para borrar estadísticas (borrar solo hombres, mujeres o ambos)
-    //TODO: no emviar nombres no votados
     //TODO: página inicial de configuración
 
 
@@ -75,7 +72,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         textViewTitle   = (TextView)findViewById(R.id.TextViewTitle);
         layoutButtons   = (LinearLayout)findViewById(R.id.linearLayoutButtons);
-        bufferNombres   = Collections.synchronizedList(new ArrayList<String>(pref_serverBuffer + BUFFER_NAMES_SIZE));
+        bufferNombres   = Collections.synchronizedList(new ArrayList<String>(BUFFER_NAMES_SIZE));
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
         setSupportActionBar(toolbar);
@@ -148,18 +145,12 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         new_numberOfButtons = sharedPref.getInt(getString(R.string.pref_numberOfButtons), DEFAULT_NUMBER_OF_BUTTONS);
         new_freqMax         = sharedPref.getInt(getString(R.string.pref_freqMax), DEFAULT_MAX_FREQ_THRESHOLD);
         new_freqMin         = sharedPref.getInt(getString(R.string.pref_freqMin), DEFAULT_MIN_FREQ_THRESHOLD);
-        new_bufferName      = sharedPref.getInt(getString(R.string.pref_bufferNombres), DEFAULT_BUFFER_SERVER);
         new_userName        = sharedPref.getString(getString(R.string.pref_userName), null);
         new_sexo            = sharedPref.getString(getString(R.string.pref_sexo), "H");
         new_useFreq         = sharedPref.getBoolean(getString(R.string.pref_useFreq), true);
         new_multiNames      = sharedPref.getBoolean(getString(R.string.pref_useCompoundNames), false);
         new_useFilters      = sharedPref.getBoolean(getString(R.string.pref_filtrarNombres), true);
 
-
-        if(new_bufferName!=pref_serverBuffer){
-            pref_serverBuffer = new_bufferName;
-            Log.d(DEBUG_TAG, "New pref buffer: " + pref_serverBuffer);
-        }
 
         if(new_freqMax!= pref_freqMax){
             pref_freqMax = new_freqMax;
@@ -378,7 +369,6 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         String url;
 
         url = URL_SERVER_GET_DATA +
-                "?buffer=" + pref_serverBuffer +
                 "&sexo=" + pref_sexo +
                 (pref_useFilters?
                     (pref_useCompoundNames? "&multiName=1":"") +
