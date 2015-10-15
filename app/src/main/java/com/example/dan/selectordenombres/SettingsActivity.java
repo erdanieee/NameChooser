@@ -260,7 +260,7 @@ public class SettingsActivity extends PreferenceActivity {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_notification);
+            addPreferencesFromResource(R.xml.pref_servidor);
 
             prefUseFilter = findPreference(getResources().getString(R.string.pref_filtrarNombres));
 

@@ -5,6 +5,9 @@
 //	nonClicked = -1;
 
 
+//TODO: cambiar para que solo se envíen votos positivos
+
+
 if ( isset($_GET["clicked"]) && isset($_GET["nonClicked"]) && isset($_GET["userName"]) && is_numeric($_GET["clicked"]) ){
 	//INSERT INTO table (a,b,c) VALUES (1,2,3) ON DUPLICATE KEY UPDATE c=c+1;
 
