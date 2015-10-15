@@ -12,12 +12,18 @@ $SQL_SEXO     = ( isset($_GET["sexo"]) && preg_match('/^[HM]$/',$_GET["sexo"]) )
 $SQL_COMP_NAM = ( isset($_GET["multiName"]) ) ? "" : " AND nombre not like '% %' ";
 $SQL_COUNT    = ( isset($_GET["count"]) ) ? true : false;
 
+if ($SQL_COUNT){
+	header( 'Location: ./getCount.php' ) ;	
+	exit();
+}
+
+
 $mysqli=new mysqli("localhost","names","como1cerda=)","names") or die('Could not connect to the database server' . $mysqli->connect_error);
 $string= 'No results found!';
 $query = "";
 
 if (){
-	$query = "SELECT COUNT(id) as id FROM nombres where sexo like $SQL_SEXO and frecuencia>=$SQL_FREQ_MIN and frecuencia <=$SQL_FREQ_MAX $SQL_COMP_NAM order by RAND() ";
+	$query = "SELECT COUNT(id) as id FROM nombres where sexo like $SQL_SEXO and frecuencia>=$SQL_FREQ_MIN and frecuencia <=$SQL_FREQ_MAX $SQL_COMP_NAM";
 } else {
 	//TODO: $query = "";
 }
