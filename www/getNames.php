@@ -3,13 +3,16 @@
 //TODO: eliminar tamaño del buffer (dejarlo solo en la parte del servidor)
 
 
-function queryToArray($query, &$array){
+function queryToArray($mysqli, $query, &$a){
+	echo "<br><br>";
+	var_dump($query);
 	if ($stmt = $mysqli->prepare($query)) {
 		$stmt->execute();
 		$stmt->bind_result($id, $nombre);
 
 	    	while ($stmt->fetch()) {
-			$items[$id] = $nombre;
+			$a[$id] = $nombre;
+			echo "<br>".$a[$id];
 	    	}
 	    	$stmt->close();
 
@@ -41,11 +44,11 @@ function shuffle_with_keys(&$array) {
 
 
 
-$SQL_LIMIT_VOTED  = 75;
-$SQL_LIMIT_ALL  = 25;
+$SQL_LIMIT_VOTED  = 40;
+$SQL_LIMIT_ALL  = 10;
 
 $SQL_SEXO     = ( isset($_GET["sexo"]) && preg_match('/^[HM]$/',$_GET["sexo"]) ) ? "'".$_GET["sexo"]."'"				: "'H'";
-$SQL_USER     = ( isset($_GET["user"]) ) 					 ? "'".$_GET["user"]."'" 				: "";
+$SQL_USER     = ( isset($_GET["user"]) ) 					 ? "'".$_GET["user"]."'" 				: "'Dan'";
 $SQL_FREQ_MAX = ( isset($_GET["freqMax"]) && is_numeric($_GET["freqMax"]) )	 ? " AND frecuencia <=".((float)$_GET["freqMax"]) 	: ""; 
 $SQL_FREQ_MIN = ( isset($_GET["freqMin"]) && is_numeric($_GET["freqMin"]) ) 	 ? " AND frecuencia >=".((float)$_GET["freqMin"]) 	: "";
 $SQL_COMP_NAM = ( ! isset($_GET["multiName"]) ) 				 ? " AND nombre not like '% %'" 			: "";
@@ -81,9 +84,9 @@ $items = array();
 
 $mysqli = new mysqli("localhost","names","como1cerda=)","names") or die('Could not connect to the database server' . $mysqli->connect_error);
 //obtenemos una sublista de nombres votados
-queryToArray($query1, $array);
+queryToArray($mysqli, $query1, $items);
 //obtenemos una sublista de nombres (votados y no votados)
-queryToArray($query2, $array);
+queryToArray($mysqli, $query2, $items);
 $mysqli->close();
 
 //randomizamos el order
@@ -92,7 +95,7 @@ shuffle_with_keys($items);
 //formateamos la salida
 $string= '';
 foreach($items as $k => $v) {
-	$string.= $k . ":" . $v . ";"
+	$string.= $k . ":" . $v . ";";
 }
 
 
