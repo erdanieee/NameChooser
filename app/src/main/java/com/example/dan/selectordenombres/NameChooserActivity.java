@@ -385,7 +385,9 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             while (bufferNombres.size()<BUFFER_NAMES_SIZE) {
                 try {
                     for (String s : downloadUrl(urls[0]).split(";")) {
-                        bufferNombres.add(s);
+                        if (!bufferNombres.contains(s)) {
+                            bufferNombres.add(s);
+                        }
                     }
                     Log.d(DEBUG_TAG, "Tamaño lista de nombres: " + bufferNombres.size());
 

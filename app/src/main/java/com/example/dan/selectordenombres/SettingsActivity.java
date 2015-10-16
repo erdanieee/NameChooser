@@ -268,7 +268,7 @@ public class SettingsActivity extends PreferenceActivity {
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryIntToValue(findPreference(getResources().getString(R.string.pref_bufferNombres)));
+            //bindPreferenceSummaryIntToValue(findPreference(getResources().getString(R.string.pref_bufferNombres)));
             bindPreferenceSummaryStringCount(findPreference(getResources().getString(R.string.pref_sexo)));
             bindPreferenceSummaryIntCount(findPreference(getResources().getString(R.string.pref_freqMax)));
             bindPreferenceSummaryIntCount(findPreference(getResources().getString(R.string.pref_freqMin)));

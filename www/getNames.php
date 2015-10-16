@@ -75,7 +75,8 @@ $query2 = "SELECT id, nombre ".
 
 //Si se realiza una consulta de número de nombres disponible, se redirige la consulta a getCount.php
 if ($SQL_COUNT){
-	header( 'Location: ./getCount.php' ) ;	
+	header( "Location: ./getCount.php".
+		$_SERVER['QUERY_STRING']) ;	
 	exit();
 }
 
