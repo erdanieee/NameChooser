@@ -4,15 +4,15 @@
 
 
 function queryToArray($mysqli, $query, &$a){
-	echo "<br><br>";
-	var_dump($query);
+	//echo "<br><br>";
+	//var_dump($query);
 	if ($stmt = $mysqli->prepare($query)) {
 		$stmt->execute();
 		$stmt->bind_result($id, $nombre);
 
 	    	while ($stmt->fetch()) {
 			$a[$id] = $nombre;
-			echo "<br>".$a[$id];
+			//echo "<br>".$a[$id];
 	    	}
 	    	$stmt->close();
 
