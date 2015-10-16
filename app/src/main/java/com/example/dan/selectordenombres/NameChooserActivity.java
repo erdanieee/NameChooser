@@ -10,6 +10,8 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -39,7 +41,7 @@ import java.util.List;
 public class NameChooserActivity extends AppCompatActivity implements View.OnClickListener{
     private static final int INTENT_RESULT_SETTING = 99;
     private final int BUFFER_NAMES_SIZE = 25;
-    private final int DEFAULT_NUMBER_OF_BUTTONS = 3;
+    private final int DEFAULT_NUMBER_OF_BUTTONS = 5;
     private final int DEFAULT_MAX_FREQ_THRESHOLD = 10;
     private final int DEFAULT_MIN_FREQ_THRESHOLD = 50;
     private final String DEBUG_TAG = "NameChooserMainActivity";
@@ -77,25 +79,26 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         setSupportActionBar(toolbar);
 
-        checkConectivity();
-        updatePreferences();
-        textViewTitle.setText("Selecciona el nombre que más te gusta de entre los siguientes:");
 
 
         /*Intent i = new Intent(this, NewUserActivity.class);
         startActivity(i);*/
 
+        textViewTitle.setText("Cargando lista de nombres. Por favor, espera...");
+        checkConectivity();
+        updatePreferences();
+        textViewTitle.setText("Selecciona el nombre que más te gusta de entre los siguientes:");
 
-        /*
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                setNames();
+                /*Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();*/
             }
-        });*/
+        });
     }
 
 
@@ -136,7 +139,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
     private void updatePreferences() {
         SharedPreferences sharedPref;
-        int new_numberOfButtons, new_freqMax, new_freqMin, new_bufferName;
+        int new_numberOfButtons, new_freqMax, new_freqMin;
         String new_userName, new_sexo;
         boolean new_useFreq, new_multiNames, new_useFilters;
 
@@ -265,10 +268,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         //bufferNombres.trimToSize();
         if(bufferNombres.size()>= pref_numberOfButtons){
-            String[] names;
             String[] tokens;
-
-            //names = bufferNombres.get(0).split(";");
 
             int i=0;
 
@@ -369,7 +369,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         String url;
 
         url = URL_SERVER_GET_DATA +
-                "&sexo=" + pref_sexo +
+                "?sexo=" + pref_sexo +
                 (pref_useFilters?
                     (pref_useCompoundNames? "&multiName=1":"") +
                     (pref_useFreq? "&freqMax="+ pref_freqMax + "&freqMin="+ pref_freqMin :"")
