@@ -8,22 +8,11 @@
 //TODO: cambiar para que solo se envíen votos positivos
 
 
-if ( isset($_GET["clicked"]) && isset($_GET["nonClicked"]) && isset($_GET["userName"]) && is_numeric($_GET["clicked"]) ){
+if ( isset($_GET["clicked"]) && isset($_GET["userName"]) && is_numeric($_GET["clicked"]) ){
 	//INSERT INTO table (a,b,c) VALUES (1,2,3) ON DUPLICATE KEY UPDATE c=c+1;
 
 	$userName = htmlspecialchars( $_GET["userName"] );
 	$clicked = (int) $_GET["clicked"];
-
-	$nonClicked = array();
-	foreach( split(";", $_GET["nonClicked"]) as $nc ){
-		if ( is_numeric($nc) ){
-			$nonClicked[] = (int) $nc;
-		
-		} else {
-			http_response_code(400);	//400: bad request
-			exit();
-		}
-	}
 
 	$db=new mysqli("localhost","names","como1cerda=)","names");
 	if ($db->connect_errno) {
@@ -35,31 +24,19 @@ if ( isset($_GET["clicked"]) && isset($_GET["nonClicked"]) && isset($_GET["userN
 		try {
 			$db->begin_transaction();
 
-			$query = "INSERT INTO votos (id, idName, user, score, count) VALUES (?, ?, '$userName', ?, 1) ON DUPLICATE KEY UPDATE score=score+?, count=count+1";
+			$query = "INSERT INTO votos (id, idName, user, score, count) VALUES (?, ?, '$userName', 1, 1) ON DUPLICATE KEY UPDATE score=score+1, count=count+1";
 			
-//			error_log(var_dump($query));
-//			echo $stmt;
-//			$stmt = $db->prepare($query);
 			if ( !($stmt = $db->prepare($query)) ) {
 	    			echo "Prepare failed: (" . $db->errno . ") " . $db->error;
 			}
 
 
-			$stmt->bind_param('siii', $i, $in, $s, $s);
+			$stmt->bind_param('si', $i, $in);
 		
 			//clicked
 			$i  = "'$userName$clicked'";
 			$in = $clicked;
-			$s  = 10;
 			$stmt->execute();
-
-			//non clicked
-			foreach($nonClicked as $nc){
-				$i  = "'$userName$nc'";
-	        	        $in = $nc;
-        	        	$s  = -1;
-				$stmt->execute();
-        	        }
 		
 			$stmt->close();	
 			$db->commit();
