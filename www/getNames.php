@@ -1,5 +1,4 @@
 <?php
-//TODO:seleccionar 75 nombres votados, 25 del total y barajar
 //TODO: eliminar tamaño del buffer (dejarlo solo en la parte del servidor)
 
 
@@ -10,11 +9,10 @@ function queryToArray($mysqli, $query, &$a){
 		$stmt->execute();
 		$stmt->bind_result($id, $nombre);
 
-	    	while ($stmt->fetch()) {
+  	while ($stmt->fetch()) {
 			$a[$id] = $nombre;
-			//echo "<br>".$a[$id];
-	    	}
-	    	$stmt->close();
+  	}
+  	$stmt->close();
 
 	} else {
 		echo "Error en la query " . $mysqli->connect_error;

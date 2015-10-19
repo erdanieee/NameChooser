@@ -44,8 +44,9 @@ import java.util.concurrent.ExecutionException;
  */
 public class SettingsActivity extends PreferenceActivity {
     private static final String DEBUG_TAG = "Setting activity";
-    public static int count;
     public static Preference prefUseFilter =null;
+    public static NotificationPreferenceFragment npf;
+    public static AsyncTask<String, Void, String> d = new DownloadDataTask(npf);
 
 
     /**
@@ -81,7 +82,6 @@ public class SettingsActivity extends PreferenceActivity {
             String url, sexo;
             int freqMax, freqMin;
             Boolean useFreq, useMultiName, useFilters;
-            boolean prefCompNames;
 
             if (!(preference instanceof CheckBoxPreference)) {
                 preference.setSummary(value.toString());
@@ -114,17 +114,7 @@ public class SettingsActivity extends PreferenceActivity {
                     "&count=1";
 
             Log.d(DEBUG_TAG, "Count URL: " + url);
-            AsyncTask<String, Void, String> d = new DownloadDataTask();
-            d.execute(url);
-
-            try {
-                prefUseFilter.setSummary("Total: " + d.get() + " nombres.");
-
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            }
+            //d.execute(url);
 
             return true;
         }
@@ -218,11 +208,6 @@ public class SettingsActivity extends PreferenceActivity {
         sBindPreferenceCountListener.onPreferenceChange(preference, PreferenceManager.getDefaultSharedPreferences(preference.getContext()).getBoolean(preference.getKey(), false));
     }
 
-    protected void updateCount(String text){
-        synchronized (prefUseFilter) {
-            prefUseFilter.setSummary(text);
-        }
-    }
 
 
     protected boolean isValidFragment (String fragmentName){
@@ -257,12 +242,19 @@ public class SettingsActivity extends PreferenceActivity {
      */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class NotificationPreferenceFragment extends PreferenceFragment {
+        protected void updateCount(String text){
+            synchronized (prefUseFilter) {
+                prefUseFilter.setSummary(text);
+            }
+        }
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_servidor);
 
             prefUseFilter = findPreference(getResources().getString(R.string.pref_filtrarNombres));
+            npf = this;
 
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
@@ -300,12 +292,20 @@ public class SettingsActivity extends PreferenceActivity {
 
 
 
+
     protected static class DownloadDataTask extends AsyncTask<String, Void, String> {
+        NotificationPreferenceFragment pref;
+
+        public DownloadDataTask (NotificationPreferenceFragment p){
+            this.pref = p;
+        }
+
         protected String doInBackground(String... urls) {
             String count="";
 
             try {
                 count=downloadUrl(urls[0]);
+                pref.updateCount(count);
 
             } catch (IOException e) {
                 e.printStackTrace();
