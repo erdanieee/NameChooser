@@ -68,7 +68,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     //TODO: quantiles:  0%      10%     20%     30%     40%     50%     60%     70%     80%     90%     100%
     //TODO:             0.0040  0.0050  0.0060  0.0080  0.0110  0.0160  0.0260  0.0480  0.1018  0.3398  29.2160
     //TODO:             2437    2258    2048    1769    1489    1235    982     735     488     244     1
-    //////a
+
 
 
     @Override
