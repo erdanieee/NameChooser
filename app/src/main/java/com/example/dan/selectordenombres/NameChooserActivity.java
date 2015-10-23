@@ -111,7 +111,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             getPreferences();
 //        }
 
-        resetStatistics(DatabaseHelper.SEXO.MALE);
+        resetStatistics(DatabaseHelper.SEXO.FEMALE);
 
         setNames();
         textViewTitle.setText("Selecciona de los siguientes nombres el que más te gusta:");
