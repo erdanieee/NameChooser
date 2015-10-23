@@ -28,7 +28,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 
 /**
@@ -106,14 +105,14 @@ public class SettingsActivity extends PreferenceActivity {
             useFreq         = PreferenceManager.getDefaultSharedPreferences(preference.getContext()).getBoolean(preference.getContext().getResources().getString(R.string.pref_useFreq), false);
             useFilters      = PreferenceManager.getDefaultSharedPreferences(preference.getContext()).getBoolean(preference.getContext().getResources().getString(R.string.pref_filtrarNombres), true);
 
-            url = NameChooserActivity.URL_SERVER_GET_DATA +
+            /*url = NameChooserActivity.URL_SERVER_GET_DATA +
                     "?sexo=" + sexo +
                     (useFilters?
                         (useMultiName? "&multiName=1":"") + (useFreq? "&freqMax="+ freqMax + "&freqMin="+ (float)freqMin/100 : "")
                         : "&multiName=1") +
                     "&count=1";
 
-            Log.d(DEBUG_TAG, "Count URL: " + url);
+            Log.d(DEBUG_TAG, "Count URL: " + url);*/
             //d.execute(url);
 
             return true;

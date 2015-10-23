@@ -21,8 +21,11 @@ import java.util.ArrayList;
  */
 public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String DATABASE_NAME       = "names.db";
+    private String FEMALE_SYMBOL = "M";
+    private String MALE_SYMBOL = "H";
     private static final int DATABASE_VERSION       = 1;
     private Context mContext;
+    public enum SEXO { MALE, FEMALE};
 
 
     public DatabaseHelper(Context contexto){
@@ -77,7 +80,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
     public long getUsedCount(){
-        return count(TablaNombres.TABLA_NOMBRES, TablaNombres.COL_COUNT+"=?", new String[]{"1"});
+        return count(TablaNombres.TABLA_NOMBRES, TablaNombres.COL_USED+"=?", new String[]{"1"});
     }
 
 
@@ -154,16 +157,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         Cursor c;
         String[] proyection;
+        String selection;
+        String[] selectionArg;
         String groupBy;
         String order;
         String limit;
 
         proyection      = new String[]{"COUNT(" + TablaNombres._ID + ")"};
+        selection       = TablaNombres.COL_USED + "=?";
+        selectionArg    = new String[] {"1"};
         groupBy         = TablaNombres.COL_COUNT;
         order           = TablaNombres.COL_COUNT + " ASC";
         limit           = "1";
 
-        c = getReadableDatabase().query(TablaNombres.TABLA_NOMBRES, proyection, null, null, groupBy, null, order, limit);       //FIXME: si no funcionar usar rawQuery
+        c = getReadableDatabase().query(TablaNombres.TABLA_NOMBRES, proyection, selection, selectionArg, groupBy, null, order, limit);       //FIXME: si no funcionar usar rawQuery
 
         while(c.moveToNext()){
             count = c.getInt(0);
@@ -225,4 +232,44 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         stmt.execute();
     }
+
+
+    public void resetTable (SEXO s){
+        SQLiteDatabase db;
+        SQLiteStatement stmt;
+
+        db  = getWritableDatabase();
+
+        stmt = db.compileStatement("UPDATE " +
+                TablaNombres.TABLA_NOMBRES +
+                " SET " + TablaNombres.COL_USED + "=?" +
+                " AND " + TablaNombres.COL_SCORE + "=?" +
+                " AND " + TablaNombres.COL_COUNT + "=?" +
+                " WHERE " + TablaNombres.COL_SEXO + "=?"
+        );
+
+        try {
+            db.beginTransaction();
+
+            //set sex
+            stmt.bindLong(1, 1);
+            stmt.bindLong(2, 0);
+            stmt.bindLong(3, 0);
+            stmt.bindString(4, s==SEXO.FEMALE ? FEMALE_SYMBOL : MALE_SYMBOL);
+            stmt.execute();
+
+            //unset the other sex
+            stmt.bindLong(1, 0);
+            stmt.bindLong(2, 0);
+            stmt.bindLong(3, 0);
+            stmt.bindString(4, s==SEXO.FEMALE ? MALE_SYMBOL : FEMALE_SYMBOL);
+            stmt.execute();
+
+            db.setTransactionSuccessful();
+
+        } finally {
+            db.endTransaction();
+        }
+    }
+
 }

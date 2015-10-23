@@ -2,13 +2,11 @@ package com.example.dan.selectordenombres;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -73,6 +71,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     }
 
     private void setNumberOfNamesForCountRound(int i){ _numberOfNamesForCountRound=i; }
+    private int updateNumberOfNamesForCountRound(){ return getNumberOfNamesForCountRound(true); }
     private int getNumberOfNamesForCountRound(){ return getNumberOfNamesForCountRound(false); }
     private int getNumberOfNamesForCountRound(boolean updateNumberOfRemainingSamples){
         if(updateNumberOfRemainingSamples || _numberOfNamesForCountRound==null){
@@ -100,17 +99,21 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         textViewTitle   = (TextView)findViewById(R.id.TextViewTitle);
         layoutButtons   = (LinearLayout)findViewById(R.id.linearLayoutButtons);
         db              = new DatabaseHelper(this);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
-        setSupportActionBar(toolbar);
+        //setSupportActionBar(toolbar);
 
-        if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.pref_firstStart), true)) {
-            startActivityForResult(new Intent(this, NewUserActivity.class), INTENT_NEW_USER);   //TODO: considerar la posibilidad de hacerlo con un diálogo en lugar de un intent
+//        if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.pref_firstStart), true)) {
+//            startActivityForResult(new Intent(this, NewUserActivity.class), INTENT_NEW_USER);   //TODO: considerar la posibilidad de hacerlo con un diálogo en lugar de un intent
 
-        } else {
+
+//        } else {
             getPreferences();
-        }
+//        }
 
+        resetStatistics(DatabaseHelper.SEXO.MALE);
+
+        setNames();
         textViewTitle.setText("Selecciona de los siguientes nombres el que más te gusta:");
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -122,6 +125,10 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                         .setAction("Action", null).show();*/
             }
         });
+    }
+
+    private void resetStatistics(DatabaseHelper.SEXO s) {
+        db.resetTable(s);
     }
 
 
@@ -192,9 +199,10 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         int i=0;
         Button b;
 
+        nombres = db.getUsedNamesByRandomAndCount(getNumberOfButtons());
+
         setButtonsVisibility(false);
 
-        nombres = db.getUsedNamesByRandomAndCount(getNumberOfButtons());
         i       = 0;
         for (Nombre n : nombres){
             b = (Button) layoutButtons.getChildAt(i++);
@@ -275,6 +283,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                 db.unUseLastNNamesByScore((int) (getNumberOfNamesUsed() / 2));
                 updateNumberOfNamesUsed();
                 updateNumberOfButtons();
+                updateNumberOfNamesForCountRound();
             }
 
             setNames();
