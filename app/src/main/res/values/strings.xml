@@ -13,4 +13,5 @@
     <string name="pref_useFreqMin">pref_useFreqMin</string>
     <string name="pref_freqMin">pref_freqMin</string>
     <string name="pref_filtrarNombres">pref_filterNames</string>
+    <string name="pref_firstStart">pref_firstStart</string>
 </resources>

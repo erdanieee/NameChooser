@@ -2,14 +2,19 @@ package database;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
+import android.widget.Button;
+import android.widget.LinearLayout;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 
 /**
  * Created by dan on 25/08/13.
@@ -71,9 +76,153 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    public long count(String table, String selection, String[] selectionArgs){
+    public long getUsedCount(){
+        return count(TablaNombres.TABLA_NOMBRES, TablaNombres.COL_COUNT+"=?", new String[]{"1"});
+    }
+
+
+    private long count(String table, String selection, String[] selectionArgs){
         long c;
         c = DatabaseUtils.queryNumEntries(getReadableDatabase(), table, selection, selectionArgs);
         return c;
+    }
+
+
+    public ArrayList<Nombre> getUsedNamesByRandomAndCount(int limit){
+        ArrayList<Nombre> aux;
+        Cursor c;
+        String[] proyection;
+        String selection;
+        String[] selectionArgs;
+        String order;
+
+        proyection      = new String[]{TablaNombres._ID, TablaNombres.COL_NOMBRE, TablaNombres.COL_SCORE, TablaNombres.COL_COUNT};
+        selection       = TablaNombres.COL_USED + "=?";
+        selectionArgs   = new String[]{"1"};
+        order           = TablaNombres.COL_COUNT + " ASC, RANDOM()";
+        aux             = new ArrayList<Nombre>(limit);
+
+        c = getReadableDatabase().query(TablaNombres.TABLA_NOMBRES, proyection, selection, selectionArgs, null, null, order, String.valueOf(limit));
+
+        while(c.moveToNext()){
+            aux.add(new Nombre( c.getInt(c.getColumnIndex(TablaNombres._ID)),
+                                c.getString(c.getColumnIndex(TablaNombres.COL_NOMBRE)),
+                                c.getFloat(c.getColumnIndex(TablaNombres.COL_SCORE)),
+                                c.getInt(c.getColumnIndex(TablaNombres.COL_COUNT))
+            ));
+        }
+        c.close();
+
+        return aux;
+    }
+
+    public Nombre getHighestScoreName(){
+        Nombre n=null;
+
+        Cursor c;
+        String[] proyection;
+        String selection;
+        String[] selectionArgs;
+        String order;
+        String limit;
+
+        proyection      = new String[]{TablaNombres._ID, TablaNombres.COL_NOMBRE, TablaNombres.COL_SCORE, TablaNombres.COL_COUNT};
+        selection       = TablaNombres.COL_USED + "=?";
+        selectionArgs   = new String[]{"1"};
+        order           = TablaNombres.COL_SCORE + " DESC";
+        limit           = "1";
+
+        c = getReadableDatabase().query(TablaNombres.TABLA_NOMBRES, proyection, selection, selectionArgs, null, null, order, limit);
+
+        while(c.moveToNext()){
+            n = new Nombre( c.getInt(c.getColumnIndex(TablaNombres._ID)),
+                    c.getString(c.getColumnIndex(TablaNombres.COL_NOMBRE)),
+                    c.getFloat(c.getColumnIndex(TablaNombres.COL_SCORE)),
+                    c.getInt(c.getColumnIndex(TablaNombres.COL_COUNT))
+            );
+            break;
+        }
+        c.close();
+
+        return n;
+    }
+
+
+
+    public int getNumberOfNamesWithLessCount(){
+        int count=0;
+
+        Cursor c;
+        String[] proyection;
+        String groupBy;
+        String order;
+        String limit;
+
+        proyection      = new String[]{"COUNT(" + TablaNombres._ID + ")"};
+        groupBy         = TablaNombres.COL_COUNT;
+        order           = TablaNombres.COL_COUNT + " ASC";
+        limit           = "1";
+
+        c = getReadableDatabase().query(TablaNombres.TABLA_NOMBRES, proyection, null, null, groupBy, null, order, limit);       //FIXME: si no funcionar usar rawQuery
+
+        while(c.moveToNext()){
+            count = c.getInt(0);
+            break;
+        }
+        c.close();
+
+        return count;
+
+    }
+
+
+    public void raiseCount(LinearLayout layoutButtons) {
+        SQLiteDatabase db;
+        SQLiteStatement stmt;
+        Nombre n;
+
+        db  = getWritableDatabase();
+
+        stmt = db.compileStatement("UPDATE " +
+                    TablaNombres.TABLA_NOMBRES +
+                    " SET "   + TablaNombres.COL_COUNT + "=" + TablaNombres.COL_COUNT + "+1" +
+                    " WHERE " + TablaNombres._ID + "=?");
+
+        try {
+            db.beginTransaction();
+            for (int i = 0; i < layoutButtons.getChildCount(); i++) {
+                n = (Nombre) ((Button) layoutButtons.getChildAt(i)).getTag();
+
+                stmt.bindLong(1, n.id);
+                stmt.execute();
+            }
+            db.setTransactionSuccessful();
+
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    public void unUseLastNNamesByScore(int numberOfRows) {
+        SQLiteDatabase db;
+        SQLiteStatement stmt;
+        Nombre n;
+
+        db  = getWritableDatabase();
+
+        stmt = db.compileStatement(
+                "UPDATE " + TablaNombres.TABLA_NOMBRES +
+                        " SET " + TablaNombres.COL_USED + "=0" +
+                        " WHERE " + TablaNombres._ID + " IN" +
+                        "(" +
+                        " SELECT " + TablaNombres._ID +
+                        " FROM " + TablaNombres.TABLA_NOMBRES +
+                        " WHERE " + TablaNombres.COL_USED + "=1" +
+                        " ORDER BY " + TablaNombres.COL_SCORE + " ASC" +
+                        " LIMIT " + String.valueOf(numberOfRows) +
+                        ")"
+        );
+
+        stmt.execute();
     }
 }

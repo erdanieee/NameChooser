@@ -1,64 +1,85 @@
 package com.example.dan.selectordenombres;
 
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+
+import database.DatabaseHelper;
+import database.Nombre;
 
 public class NameChooserActivity extends AppCompatActivity implements View.OnClickListener{
-    private static final int INTENT_RESULT_SETTING = 99;
-    private final int BUFFER_NAMES_SIZE = 25;
-    private final int DEFAULT_NUMBER_OF_BUTTONS = 5;
-    private final int DEFAULT_MAX_FREQ_THRESHOLD = 10;
-    private final int DEFAULT_MIN_FREQ_THRESHOLD = 50;
+    private static final int INTENT_RESULT_SETTING  = 846384126;
+    private static final int INTENT_NEW_USER        = 684654168;
+    private static final int DEFAULT_NUMBER_CLICK_ROUND = 30;       //TODO: obtener esto como una preferencia al inicio
+    private static final int DEFAULT_MIN_NUMBER_OF_BUTTONS = 2;
+    private static final int DEFAULT_MAX_NUMBER_OF_BUTTONS = 8;
+    private static final int DEFAULT_REMAINING_NAMES_TO_END = 10;
     private final String DEBUG_TAG = "NameChooserMainActivity";
-    public static final String URL_SERVER_GET_DATA    = "http://server.bacmine.com/names/getNames.php";
-    public static final String URL_SERVER_SEND_DATA   = "http://server.bacmine.com/names/sendData.php";
     private TextView textViewTitle;
-    private List<String> bufferNombres;
-    private Button[] buttons;
     private LinearLayout layoutButtons;
-
     private String  pref_userName;
-    private int     pref_numberOfButtons;
-    private int     pref_freqMax;
-    private float   pref_freqMin;
-    private String  pref_sexo;
-    private boolean pref_useFreq;
-    private boolean pref_useCompoundNames;
-    private boolean pref_useFilters;
+
+    private DatabaseHelper db = null;
+    private Long    _numberOfNamesUsed = null;              //USE getter and setter!
+    private Integer _numberOfButtons = null;                //USE getter and setter!
+    private Integer _numberOfNamesForCountRound = null;     //USE getter and setter!
+
+    private long updateNumberOfNamesUsed(){ return getNumberOfNamesUsed(true); }
+    private long getNumberOfNamesUsed(){ return getNumberOfNamesUsed(false); }
+    private long getNumberOfNamesUsed(boolean updateNumberOfNames){
+        if (updateNumberOfNames || _numberOfNamesUsed==null){
+            _numberOfNamesUsed = db.getUsedCount();
+        }
+        return _numberOfNamesUsed;
+    }
+
+    private int updateNumberOfButtons(){ return getNumberOfButtons(true); }
+    private int getNumberOfButtons(){ return getNumberOfButtons(false); }
+    private int getNumberOfButtons(boolean updateNumberOfButtons){
+        if(updateNumberOfButtons || _numberOfButtons==null){
+            Log.d(DEBUG_TAG, "Update number of buttons");
+
+            //Calculate optimal number of buttons
+            _numberOfButtons = DEFAULT_MAX_NUMBER_OF_BUTTONS;
+            while (_numberOfButtons > DEFAULT_MIN_NUMBER_OF_BUTTONS && getNumberOfNamesUsed()/_numberOfButtons < DEFAULT_NUMBER_CLICK_ROUND){
+                _numberOfButtons--;
+            }
+
+            while (layoutButtons.getChildCount() != _numberOfButtons){
+                if(layoutButtons.getChildCount()> _numberOfButtons){
+                    layoutButtons.removeViewAt(layoutButtons.getChildCount()-1);
+
+                } else {
+                    Button b = new Button(getApplicationContext());
+                    b.setOnClickListener(this);
+                    layoutButtons.addView(b);
+                }
+            }
+        }
+        return _numberOfButtons;
+    }
+
+    private void setNumberOfNamesForCountRound(int i){ _numberOfNamesForCountRound=i; }
+    private int getNumberOfNamesForCountRound(){ return getNumberOfNamesForCountRound(false); }
+    private int getNumberOfNamesForCountRound(boolean updateNumberOfRemainingSamples){
+        if(updateNumberOfRemainingSamples || _numberOfNamesForCountRound==null){
+            _numberOfNamesForCountRound = db.getNumberOfNamesWithLessCount();
+        }
+        return _numberOfNamesForCountRound;
+    }
 
 
     //TODO: Compartir en facebook los resultados cuando se encuentre un nombre común entre la pareja.
@@ -78,28 +99,25 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         textViewTitle   = (TextView)findViewById(R.id.TextViewTitle);
         layoutButtons   = (LinearLayout)findViewById(R.id.linearLayoutButtons);
-        bufferNombres   = Collections.synchronizedList(new ArrayList<String>(BUFFER_NAMES_SIZE));
+        db              = new DatabaseHelper(this);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
         setSupportActionBar(toolbar);
 
+        if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.pref_firstStart), true)) {
+            startActivityForResult(new Intent(this, NewUserActivity.class), INTENT_NEW_USER);   //TODO: considerar la posibilidad de hacerlo con un diálogo en lugar de un intent
 
+        } else {
+            getPreferences();
+        }
 
-        /*Intent i = new Intent(this, NewUserActivity.class);
-        startActivity(i);*/
-
-        textViewTitle.setText("Cargando lista de nombres. Por favor, espera...");
-        checkConectivity();
-        updatePreferences();
-        textViewTitle.setText("Selecciona el nombre que más te gusta de entre los siguientes:");
-
+        textViewTitle.setText("Selecciona de los siguientes nombres el que más te gusta:");
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                setNames();
-                downloadData();
+                buttonClicked(null);
                 /*Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();*/
             }
@@ -107,130 +125,24 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     }
 
 
-    private boolean checkConectivity(){
-        ConnectivityManager connMgr;
-        NetworkInfo networkInfo;
-
-        connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        networkInfo = connMgr.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected()) {
-            Log.d(DEBUG_TAG, "Conectivity OK!");
-            return true;
-
-        } else {
-            Log.d(DEBUG_TAG, "Fallo de conexión");
-            new AlertDialog.Builder(getApplicationContext())
-                    .setTitle("Conectividad")
-                    .setMessage("No se ha podido establecer la conexión con el servidor.")
-                    .setPositiveButton("Reintentar", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            checkConectivity();
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            Log.d(DEBUG_TAG, "Dialogo de conexión cancelado");
-                            // do nothing
-                        }
-                    })
-                    .setIcon(android.R.drawable.ic_dialog_alert)
-                    .show();
-        }
-
-        textViewTitle.setText("No se ha podido establecer la conexión con el servidor");
-        return false;
-    }
-
-
-    private void updatePreferences() {
+    private void getPreferences() {
         SharedPreferences sharedPref;
-        int new_numberOfButtons, new_freqMax, new_freqMin;
-        String new_userName, new_sexo;
-        boolean new_useFreq, new_multiNames, new_useFilters;
 
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 
-        new_numberOfButtons = sharedPref.getInt(getString(R.string.pref_numberOfButtons), DEFAULT_NUMBER_OF_BUTTONS);
-        new_freqMax         = sharedPref.getInt(getString(R.string.pref_freqMax), DEFAULT_MAX_FREQ_THRESHOLD);
-        new_freqMin         = sharedPref.getInt(getString(R.string.pref_freqMin), DEFAULT_MIN_FREQ_THRESHOLD);
-        new_userName        = sharedPref.getString(getString(R.string.pref_userName), null);
-        new_sexo            = sharedPref.getString(getString(R.string.pref_sexo), "H");
-        new_useFreq         = sharedPref.getBoolean(getString(R.string.pref_useFreq), true);
-        new_multiNames      = sharedPref.getBoolean(getString(R.string.pref_useCompoundNames), false);
-        new_useFilters      = sharedPref.getBoolean(getString(R.string.pref_filtrarNombres), true);
-
-
-        if(new_freqMax!= pref_freqMax){
-            pref_freqMax = new_freqMax;
-            bufferNombres.clear();
-            Log.d(DEBUG_TAG, "New pref freq max: " + pref_freqMax);
-        }
-
-        if(new_freqMin!= pref_freqMin){
-            pref_freqMin = (float)new_freqMin/100;
-            bufferNombres.clear();
-            Log.d(DEBUG_TAG, "New pref freq min: " + pref_freqMin);
-        }
-
-        if(new_sexo!=pref_sexo){
-            pref_sexo = new_sexo;
-            bufferNombres.clear();
-            Log.d(DEBUG_TAG, "New pref sexo: " + pref_sexo);
-        }
-
-        if(new_useFreq!= pref_useFreq){
-            pref_useFreq = new_useFreq;
-            bufferNombres.clear();
-            Log.d(DEBUG_TAG, "New pref use freq: " + pref_useFreq);
-        }
-
-        if(new_useFilters!= pref_useFilters){
-            pref_useFilters = new_useFilters;
-            bufferNombres.clear();
-            Log.d(DEBUG_TAG, "New pref use filters: " + pref_useFilters);
-        }
-
-        if(new_multiNames!=pref_useCompoundNames){
-            pref_useCompoundNames = new_multiNames;
-            bufferNombres.clear();
-            Log.d(DEBUG_TAG, "New pref compound names: " + pref_useCompoundNames);
-        }
-
-        if(new_userName==null || new_userName.equals("")){
-            showInputDialog();
-
-        } else if(new_userName!=pref_userName){
-            pref_userName = new_userName;
-            setTitle(pref_userName);
-            Log.d(DEBUG_TAG, "New pref user name: " + pref_userName);
-        }
-
-        if(new_numberOfButtons!=pref_numberOfButtons){
-            pref_numberOfButtons = new_numberOfButtons;
-            createButtons();
-            Log.d(DEBUG_TAG, "New pref number of buttons: " + pref_numberOfButtons);
-        }
-
-        downloadData();
-        setNames();
+        pref_userName = sharedPref.getString(getString(R.string.pref_userName), "");
+        setTitle(pref_userName);
     }
 
 
-    private void createButtons() {
-        Log.d(DEBUG_TAG, "Create buttons");
-        layoutButtons.removeAllViews();
-
-        buttons = new Button[pref_numberOfButtons];
-        for (int i=0; i< pref_numberOfButtons;i++){
-            Button b = new Button(getApplicationContext());
-            b.setOnClickListener(this);
-            layoutButtons.addView(b);
-            buttons[i] = b;
-        }
-    }
 
 
-    protected void showInputDialog() {
+
+
+
+
+
+/*    protected void showInputDialog() {
         LayoutInflater layoutInflater = LayoutInflater.from(this);
         View promptView = layoutInflater.inflate(R.layout.input_dialog, null);
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
@@ -246,7 +158,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
                         editor.putString(getString(R.string.pref_userName), pref_userName);
                         editor.commit();
-                        updatePreferences();
+                        getPreferences();
                     }
                 })
                 .setNegativeButton("Cancel",
@@ -263,55 +175,41 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         // create an alert dialog
         AlertDialog alert = alertDialogBuilder.create();
         alert.show();
+    }*/
+
+
+
+
+    private void setButtonsVisibility(boolean b){
+        for (int i=0; i<layoutButtons.getChildCount(); i++){
+            ( (Button)layoutButtons.getChildAt(i) ).setEnabled(b);
+        }
     }
 
 
     private void setNames(){
-        for (Button b : buttons){
-            b.setEnabled(false);
+        ArrayList<Nombre> nombres;
+        int i=0;
+        Button b;
+
+        setButtonsVisibility(false);
+
+        nombres = db.getUsedNamesByRandomAndCount(getNumberOfButtons());
+        i       = 0;
+        for (Nombre n : nombres){
+            b = (Button) layoutButtons.getChildAt(i++);
+
+            b.setText(n.nombre);
+            b.setTag(n);
         }
+        Log.d(DEBUG_TAG, "Set names: " + nombres);
 
-        //bufferNombres.trimToSize();
-        if(bufferNombres.size()>= pref_numberOfButtons){
-            String[] tokens;
-
-            int i=0;
-
-            synchronized (bufferNombres) {
-                Iterator<String> it = bufferNombres.iterator();
-                while(it.hasNext() && i < pref_numberOfButtons){
-                    tokens = it.next().split(":");
-                    Log.d(DEBUG_TAG, "Set names: " + Arrays.toString(tokens));
-
-                    it.remove();
-
-                    if(tokens.length==2){
-                        buttons[i].setTag(tokens[0]);
-                        buttons[i].setText(tokens[1]);
-                        i++;
-
-                    } else {
-                        Log.e(DEBUG_TAG, "Error al partir el nombre del servidor");
-                    }
-                }
-            }
-
-            for (Button b : buttons){
-                b.setEnabled(true);
-            }
-
-        } else {
-            try {
-                Thread.sleep(50);
-                setNames();
-
-            } catch (Exception e){
-                e.printStackTrace();
-            }
-        }
+        setButtonsVisibility(true);
     }
 
 
+
+/*
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -342,170 +240,70 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         super.onActivityResult(requestCode, resultCode, data);
 
         switch (requestCode) {
-            case INTENT_RESULT_SETTING:
-                updatePreferences();
+            case INTENT_NEW_USER:
+                getPreferences();
+                break;
 
+            case INTENT_RESULT_SETTING:     //TODO: eliminar preferencias para cambiar sexo/frecuencia en mitad de la búsqueda. Si quieren cambiar, que empiecen de nuevo!
+                getPreferences();
+                update
                 break;
         }
     }
-
-
-
-
-
-
-
-
-
-
+*/
 
 
 
 
     @Override
     public void onClick(View v) {
-        sendData((Button) v);
-        setNames();
-        downloadData();
+        buttonClicked(v);
+    }
+
+    public void buttonClicked(View v){
+        //check end
+        if (getNumberOfNamesUsed() < DEFAULT_REMAINING_NAMES_TO_END){
+            showEndDialog(db.getHighestScoreName().nombre);
+
+        } else {
+            db.raiseCount(layoutButtons);
+
+            setNumberOfNamesForCountRound(getNumberOfNamesForCountRound()-getNumberOfButtons());
+
+            //check round
+            if (getNumberOfNamesForCountRound()<=0){
+                db.unUseLastNNamesByScore((int) (getNumberOfNamesUsed() / 2));
+                updateNumberOfNamesUsed();
+                updateNumberOfButtons();
+            }
+
+            setNames();
+        }
     }
 
 
-    private void downloadData(){
-        String url;
 
-        url = URL_SERVER_GET_DATA +
-                "?sexo=" + pref_sexo +
-                (pref_useFilters?
-                    (pref_useCompoundNames? "&multiName=1":"") +
-                    (pref_useFreq? "&freqMax="+ pref_freqMax + "&freqMin="+ pref_freqMin :"")
-                : "&multiName=1");
+    protected void showEndDialog(String winnerName) {
+        //LayoutInflater layoutInflater = LayoutInflater.from(this);
+        //View promptView = layoutInflater.inflate(R.layout.input_dialog, null);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        //alertDialogBuilder.setView(promptView);
 
-        Log.d(DEBUG_TAG, "Download url: " + url);
-        new DownloadDataTask().execute(url);
-    }
+        //( (EditText) promptView.findViewById(R.id.edittext) ).setText(winnerName);
 
-
-    protected class DownloadDataTask extends AsyncTask<String, Void, String> {
-        protected String doInBackground(String... urls) {
-            while (bufferNombres.size()<BUFFER_NAMES_SIZE) {
-                try {
-                    for (String s : downloadUrl(urls[0]).split(";")) {
-                        if (!bufferNombres.contains(s)) {
-                            bufferNombres.add(s);
-                        }
+        // setup a dialog window
+        builder
+                .setTitle("Fin!")
+                .setMessage("Ganador: " + winnerName)
+                .setIcon(android.R.drawable.picture_frame)  //FIXME: cambiar icono por uno en condiciones
+                .setCancelable(false)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //TODO: restart
                     }
-                    Log.d(DEBUG_TAG, "Tamaño lista de nombres: " + bufferNombres.size());
+                });
 
-                } catch (IOException e) {
-                    return "Unable to retrieve web page. URL may be invalid.";
-                }
-            }
-
-            return "OK";
-        }
-
-        private String downloadUrl(String myurl) throws IOException {
-            InputStream is = null;
-            // Only display the first 500 characters of the retrieved
-            // web page content.
-            int len = 5000;
-
-            try {
-                URL url = new URL(myurl);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setReadTimeout(10000 /* milliseconds */);
-                conn.setConnectTimeout(15000 /* milliseconds */);
-                conn.setRequestMethod("GET");
-                conn.setDoInput(true);
-                // Starts the query
-                conn.connect();
-                int response = conn.getResponseCode();
-                is = conn.getInputStream();
-
-                // Convert the InputStream into a string
-                String contentAsString = readIt(is, len).trim();
-                Log.d(DEBUG_TAG, contentAsString);
-                Log.d(DEBUG_TAG, "Download data: " + response);
-                return contentAsString;
-
-                // Makes sure that the InputStream is closed after the app is
-                // finished using it.
-            } finally {
-                if (is != null) {
-                    is.close();
-                }
-            }
-        }
-
-        public String readIt(InputStream stream, int len) throws IOException, UnsupportedEncodingException {
-            Reader reader = null;
-            reader = new InputStreamReader(stream,"LATIN1");
-            char[] buffer = new char[len];
-            reader.read(buffer);
-            return new String(buffer);
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-    private void sendData(Button buttonClicked){
-        String url;
-
-        try {
-            url = URL_SERVER_SEND_DATA +
-                    "?clicked=" + buttonClicked.getTag() +
-                    "&userName=" + URLEncoder.encode(pref_userName, "LATIN1");
-
-            Log.d(DEBUG_TAG, "Send url: " + url);
-            new SendDataToServer().execute(url);
-
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    private class SendDataToServer extends AsyncTask<String, Void, String> {
-        @Override
-        protected String doInBackground(String... urls) {
-            try {
-                if(sendData(urls[0])){
-                    return "OK";
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            //Toast.makeText(getApplicationContext(), "Error al enviar datos", Toast.LENGTH_LONG).show();
-            return "BAD";
-        }
-
-        private boolean sendData(String myurl) throws IOException {
-            URL url = new URL(myurl);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setReadTimeout(20000 /* milliseconds */);
-            conn.setConnectTimeout(30000 /* milliseconds */);
-            conn.setRequestMethod("GET");
-            conn.setDoInput(true);
-            // Starts the query
-            conn.connect();
-            int response = conn.getResponseCode();
-            Log.d(DEBUG_TAG, "Sending data: " + response);
-
-            if (response==HttpURLConnection.HTTP_OK){
-                return true;
-
-            } else {
-                return false;
-            }
-        }
+        builder.create().show();
     }
 }
