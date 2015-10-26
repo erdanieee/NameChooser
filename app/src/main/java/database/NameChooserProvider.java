@@ -8,11 +8,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.provider.BaseColumns;
-import android.support.annotation.Nullable;
 import android.util.Log;
-
-import database.DatabaseHelper;
-import database.TablaNombres;
 
 /**
  * Created by dlopez on 23/10/13.
@@ -57,7 +53,7 @@ public class NameChooserProvider extends ContentProvider {
             case NOMBRES_ID:
                 sqlb.appendWhere(TablaNombres._ID + "=" + uri.getLastPathSegment());
             case NOMBRES:
-                sqlb.setTables(TablaNombres.TABLA_NOMBRES);
+                sqlb.setTables(TablaNombres.TABLA);
                 break;
 
             default:
@@ -80,7 +76,7 @@ public class NameChooserProvider extends ContentProvider {
             case NOMBRES_ID:
                 where = TablaNombres._ID + "=" + uri.getLastPathSegment();
             case NOMBRES:
-                tabla = TablaNombres.TABLA_NOMBRES;
+                tabla = TablaNombres.TABLA;
                 break;
 
             default:
@@ -105,7 +101,7 @@ public class NameChooserProvider extends ContentProvider {
             case NOMBRES_ID:
                 where = BaseColumns._ID + "=" + uri.getLastPathSegment();
             case NOMBRES:
-                tabla = TablaNombres.TABLA_NOMBRES;
+                tabla = TablaNombres.TABLA;
                 break;
             default:
                 throw new IllegalStateException ("Update no válido!!") ;
@@ -125,7 +121,7 @@ public class NameChooserProvider extends ContentProvider {
 
         switch (uriMatcher.match(uri)){
             case NOMBRES:
-                tabla = TablaNombres.TABLA_NOMBRES;
+                tabla = TablaNombres.TABLA;
                 contentUri  = CONTENT_URI_NOMBRES;
                 break;
             default:
