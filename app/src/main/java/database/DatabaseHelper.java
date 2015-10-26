@@ -25,6 +25,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private String MALE_SYMBOL = "H";
     private static final int DATABASE_VERSION       = 1;
     private Context mContext;
+
     public enum SEXO { MALE, FEMALE};
 
 
@@ -201,7 +202,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 n = (Nombre) ((Button) layoutButtons.getChildAt(i)).getTag();
 
                 stmt.bindLong(1, n.id);
-                stmt.execute();
+                stmt.executeUpdateDelete();
             }
             db.setTransactionSuccessful();
 
@@ -230,6 +231,42 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                         ")"
         );
 
-        stmt.execute();
+        stmt.executeUpdateDelete();
+    }
+
+    public void resetTable (SEXO s){
+        SQLiteDatabase db;
+        SQLiteStatement stmt;
+
+        db  = getWritableDatabase();
+
+        stmt = db.compileStatement("UPDATE " +
+                        TablaNombres.TABLA_NOMBRES +
+                        " SET " + TablaNombres.COL_USED + "=?" +
+                        " AND " + TablaNombres.COL_SCORE + "=?" +
+                        " AND " + TablaNombres.COL_COUNT + "=?" +
+                        " WHERE " + TablaNombres.COL_SEXO + "=?"
+        );
+
+        try {
+            db.beginTransaction();
+
+            //set sex
+            stmt.bindLong(1, 1);
+            stmt.bindLong(2, 0);
+            stmt.bindLong(3, 0);
+            stmt.bindString(4, s==SEXO.FEMALE ? FEMALE_SYMBOL : MALE_SYMBOL);
+            stmt.executeUpdateDelete();
+
+            //unset the other sex
+            stmt.bindLong(1, 0);
+            stmt.bindString(4, s==SEXO.FEMALE ? MALE_SYMBOL : FEMALE_SYMBOL);
+            stmt.executeUpdateDelete();
+
+        db.setTransactionSuccessful();
+
+        } finally {
+            db.endTransaction();
+        }
     }
 }
