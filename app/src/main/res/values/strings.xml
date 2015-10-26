@@ -14,4 +14,6 @@
     <string name="pref_freqMin">pref_freqMin</string>
     <string name="pref_filtrarNombres">pref_filterNames</string>
     <string name="pref_firstStart">pref_firstStart</string>
+    <string name="pref_totalVotesNeeded">pref_totalNames</string>
+    <string name="pref_totalVotesDone">pref_totalVotes</string>
 </resources>

@@ -6,7 +6,6 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -21,10 +20,15 @@ import java.util.ArrayList;
  */
 public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String DATABASE_NAME       = "names.db";
+    private static final String DATABASE_FILE   = "test.txt";
+    //private static final String DATABASE_FILE   = "spanish.txt";
     private String FEMALE_SYMBOL = "M";
     private String MALE_SYMBOL = "H";
-    private static final int DATABASE_VERSION       = 1;
+    private static final int DATABASE_VERSION  = 4;
     private Context mContext;
+
+
+
 
     public enum SEXO { MALE, FEMALE};
 
@@ -43,15 +47,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String[] tokens;
         ContentValues values = new ContentValues();
 
-        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TablaNombres.TABLA_NOMBRES);
-
-
-        Log.i(this.getClass().getSimpleName(), "Creando nueva base de datos");
-        sqLiteDatabase.execSQL(TablaNombres.sqlCreateTableContactos);
-
         try{
-            br = new BufferedReader(new InputStreamReader(mContext.getAssets().open("spanish.txt")));
+            br = new BufferedReader(new InputStreamReader(mContext.getAssets().open(DATABASE_FILE)));
             sqLiteDatabase.beginTransaction();
+
+            sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TablaNombres.TABLA);
+
+            Log.i(this.getClass().getSimpleName(), "Creando nueva base de datos");
+            sqLiteDatabase.execSQL(TablaNombres.sqlCreateTableContactos);
 
             while((line=br.readLine())!=null){
                 tokens = line.split("\t");
@@ -61,7 +64,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 values.put(TablaNombres.COL_SEXO, tokens[1]);
                 values.put(TablaNombres.COL_FRECUENCIA, tokens[2]);
 
-                sqLiteDatabase.insert(TablaNombres.TABLA_NOMBRES, null, values);
+                sqLiteDatabase.insert(TablaNombres.TABLA, null, values);
             }
             sqLiteDatabase.setTransactionSuccessful();
 
@@ -76,12 +79,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
+        onCreate(db);       //FIXME: temporal!!!        onCreate(db);       //FIXME: temporal!!!
     }
 
 
     public long getUsedCount(){
-        return count(TablaNombres.TABLA_NOMBRES, TablaNombres.COL_USED+"=?", new String[]{"1"});
+        return count(TablaNombres.TABLA, TablaNombres.COL_USED+"=?", new String[]{"1"});
     }
 
 
@@ -106,7 +109,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         order           = TablaNombres.COL_COUNT + " ASC, RANDOM()";
         aux             = new ArrayList<Nombre>(limit);
 
-        c = getReadableDatabase().query(TablaNombres.TABLA_NOMBRES, proyection, selection, selectionArgs, null, null, order, String.valueOf(limit));
+        c = getReadableDatabase().query(TablaNombres.TABLA, proyection, selection, selectionArgs, null, null, order, String.valueOf(limit));
 
         while(c.moveToNext()){
             aux.add(new Nombre( c.getInt(c.getColumnIndex(TablaNombres._ID)),
@@ -119,6 +122,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return aux;
     }
+
+
 
     public Nombre getHighestScoreName(){
         Nombre n=null;
@@ -136,7 +141,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         order           = TablaNombres.COL_SCORE + " DESC";
         limit           = "1";
 
-        c = getReadableDatabase().query(TablaNombres.TABLA_NOMBRES, proyection, selection, selectionArgs, null, null, order, limit);
+        c = getReadableDatabase().query(TablaNombres.TABLA, proyection, selection, selectionArgs, null, null, order, limit);
 
         while(c.moveToNext()){
             n = new Nombre( c.getInt(c.getColumnIndex(TablaNombres._ID)),
@@ -171,7 +176,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         order           = TablaNombres.COL_COUNT + " ASC";
         limit           = "1";
 
-        c = getReadableDatabase().query(TablaNombres.TABLA_NOMBRES, proyection, selection, selectionArg, groupBy, null, order, limit);       //FIXME: si no funcionar usar rawQuery
+        c = getReadableDatabase().query(TablaNombres.TABLA, proyection, selection, selectionArg, groupBy, null, order, limit);       //FIXME: si no funcionar usar rawQuery
 
         while(c.moveToNext()){
             count = c.getInt(0);
@@ -186,23 +191,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public void raiseCount(LinearLayout layoutButtons) {
         SQLiteDatabase db;
-        SQLiteStatement stmt;
         Nombre n;
 
-        db  = getWritableDatabase();
-
-        stmt = db.compileStatement("UPDATE " +
-                    TablaNombres.TABLA_NOMBRES +
-                    " SET "   + TablaNombres.COL_COUNT + "=" + TablaNombres.COL_COUNT + "+1" +
-                    " WHERE " + TablaNombres._ID + "=?");
+        db = getWritableDatabase();
 
         try {
             db.beginTransaction();
             for (int i = 0; i < layoutButtons.getChildCount(); i++) {
                 n = (Nombre) ((Button) layoutButtons.getChildAt(i)).getTag();
 
-                stmt.bindLong(1, n.id);
-                stmt.executeUpdateDelete();
+                db.execSQL("UPDATE " + TablaNombres.TABLA +
+                                " SET " + TablaNombres.COL_COUNT + "=" + TablaNombres.COL_COUNT + "+1" +
+                                " WHERE " + TablaNombres._ID + "=" + String.valueOf(n.id)
+                );
             }
             db.setTransactionSuccessful();
 
@@ -211,62 +212,100 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+
+
     public void unUseLastNNamesByScore(int numberOfRows) {
         SQLiteDatabase db;
-        SQLiteStatement stmt;
         Nombre n;
 
         db  = getWritableDatabase();
 
-        stmt = db.compileStatement(
-                "UPDATE " + TablaNombres.TABLA_NOMBRES +
+        db.execSQL(
+                "UPDATE " + TablaNombres.TABLA +
                         " SET " + TablaNombres.COL_USED + "=0" +
                         " WHERE " + TablaNombres._ID + " IN" +
                         "(" +
                         " SELECT " + TablaNombres._ID +
-                        " FROM " + TablaNombres.TABLA_NOMBRES +
+                        " FROM " + TablaNombres.TABLA +
                         " WHERE " + TablaNombres.COL_USED + "=1" +
                         " ORDER BY " + TablaNombres.COL_SCORE + " ASC" +
                         " LIMIT " + String.valueOf(numberOfRows) +
                         ")"
         );
-
-        stmt.executeUpdateDelete();
+    }
     }
 
     public void resetTable (SEXO s){
         SQLiteDatabase db;
-        SQLiteStatement stmt;
+        ContentValues values;
+        String selection;
+        String[] selectionArgs;
 
-        db  = getWritableDatabase();
-
-        stmt = db.compileStatement("UPDATE " +
-                        TablaNombres.TABLA_NOMBRES +
-                        " SET " + TablaNombres.COL_USED + "=?" +
-                        " AND " + TablaNombres.COL_SCORE + "=?" +
-                        " AND " + TablaNombres.COL_COUNT + "=?" +
-                        " WHERE " + TablaNombres.COL_SEXO + "=?"
-        );
+        values = new ContentValues();
+        selection = TablaNombres.COL_SEXO + "=?";
+        db = getWritableDatabase();
 
         try {
             db.beginTransaction();
 
-            //set sex
-            stmt.bindLong(1, 1);
-            stmt.bindLong(2, 0);
-            stmt.bindLong(3, 0);
-            stmt.bindString(4, s==SEXO.FEMALE ? FEMALE_SYMBOL : MALE_SYMBOL);
-            stmt.executeUpdateDelete();
+            values.clear();
+            values.put(TablaNombres.COL_USED, 1);
+            values.put(TablaNombres.COL_SCORE, 0);
+            values.put(TablaNombres.COL_COUNT, 0);
+            selectionArgs = new String[]{s==SEXO.FEMALE ? FEMALE_SYMBOL : MALE_SYMBOL};
+            db.update(TablaNombres.TABLA, values, selection, selectionArgs);
 
-            //unset the other sex
-            stmt.bindLong(1, 0);
-            stmt.bindString(4, s==SEXO.FEMALE ? MALE_SYMBOL : FEMALE_SYMBOL);
-            stmt.executeUpdateDelete();
+            values.clear();
+            values.put(TablaNombres.COL_USED, 0);
+            values.put(TablaNombres.COL_SCORE, 0);
+            values.put(TablaNombres.COL_COUNT, 0);
+            selectionArgs = new String[]{s==SEXO.FEMALE ? MALE_SYMBOL : FEMALE_SYMBOL};
+            db.update(TablaNombres.TABLA, values, selection, selectionArgs);
 
-        db.setTransactionSuccessful();
+            db.setTransactionSuccessful();
 
         } finally {
             db.endTransaction();
         }
+    }
+
+
+    public void updateScore(Nombre n, float s) {
+        SQLiteDatabase db;
+
+        db = getWritableDatabase();
+
+        db.execSQL("UPDATE " + TablaNombres.TABLA +
+                        " SET " + TablaNombres.COL_SCORE + "=" + TablaNombres.COL_SCORE + "+" + String.valueOf(s) +
+                        " WHERE " + TablaNombres._ID + "=" + String.valueOf(n.id)
+        );
+    }
+
+
+    public Nombre getNombre(int id){
+        Nombre n=null;
+
+        Cursor c;
+        String[] proyection;
+        String selection;
+        String[] selectionArgs;
+
+        proyection      = new String[]{TablaNombres._ID, TablaNombres.COL_NOMBRE, TablaNombres.COL_SCORE, TablaNombres.COL_COUNT};
+        selection       = TablaNombres._ID + "=?";
+        selectionArgs   = new String[]{String.valueOf(id)};
+
+        c = getReadableDatabase().query(TablaNombres.TABLA, proyection, selection, selectionArgs, null, null, null);
+
+        while(c.moveToNext()){
+            n = new Nombre( c.getInt(c.getColumnIndex(TablaNombres._ID)),
+                    c.getString(c.getColumnIndex(TablaNombres.COL_NOMBRE)),
+                    c.getFloat(c.getColumnIndex(TablaNombres.COL_SCORE)),
+                    c.getInt(c.getColumnIndex(TablaNombres.COL_COUNT))
+            );
+            break;
+        }
+        c.close();
+
+        return n;
     }
 }

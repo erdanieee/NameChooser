@@ -24,16 +24,21 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private static final int DEFAULT_NUMBER_CLICK_ROUND = 30;       //TODO: obtener esto como una preferencia al inicio
     private static final int DEFAULT_MIN_NUMBER_OF_BUTTONS = 2;
     private static final int DEFAULT_MAX_NUMBER_OF_BUTTONS = 8;
-    private static final int DEFAULT_REMAINING_NAMES_TO_END = 10;
+    private static final int DEFAULT_REMAINING_NAMES_TO_END = 1;
     private final String DEBUG_TAG = "NameChooserMainActivity";
     private TextView textViewTitle;
     private LinearLayout layoutButtons;
     private String  pref_userName;
+    private long pref_totalVotacionesNecesarias;
+    private long pref_totalVotacionesHechas;
+    private int auxVotaciones=0;
 
     private DatabaseHelper db = null;
     private Long    _numberOfNamesUsed = null;              //USE getter and setter!
     private Integer _numberOfButtons = null;                //USE getter and setter!
     private Integer _numberOfNamesForCountRound = null;     //USE getter and setter!
+    private FloatingActionButton percentButton=null;
+
 
     private long updateNumberOfNamesUsed(){ return getNumberOfNamesUsed(true); }
     private long getNumberOfNamesUsed(){ return getNumberOfNamesUsed(false); }
@@ -51,10 +56,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             Log.d(DEBUG_TAG, "Update number of buttons");
 
             //Calculate optimal number of buttons
-            _numberOfButtons = DEFAULT_MAX_NUMBER_OF_BUTTONS;
-            while (_numberOfButtons > DEFAULT_MIN_NUMBER_OF_BUTTONS && getNumberOfNamesUsed()/_numberOfButtons < DEFAULT_NUMBER_CLICK_ROUND){
-                _numberOfButtons--;
-            }
+            _numberOfButtons = getOptimalNumberOfButtons(getNumberOfNamesUsed());
 
             while (layoutButtons.getChildCount() != _numberOfButtons){
                 if(layoutButtons.getChildCount()> _numberOfButtons){
@@ -69,6 +71,16 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         }
         return _numberOfButtons;
     }
+
+    private int getOptimalNumberOfButtons(long n){
+        int b = DEFAULT_MAX_NUMBER_OF_BUTTONS;
+        while (b > DEFAULT_MIN_NUMBER_OF_BUTTONS && n/b < DEFAULT_NUMBER_CLICK_ROUND){
+            b--;
+        }
+
+        return b;
+    }
+
 
     private void setNumberOfNamesForCountRound(int i){ _numberOfNamesForCountRound=i; }
     private int updateNumberOfNamesForCountRound(){ return getNumberOfNamesForCountRound(true); }
@@ -99,6 +111,11 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         textViewTitle   = (TextView)findViewById(R.id.TextViewTitle);
         layoutButtons   = (LinearLayout)findViewById(R.id.linearLayoutButtons);
         db              = new DatabaseHelper(this);
+        percentButton   = (FloatingActionButton)findViewById(R.id.porcentaje);
+
+        //percentButton.image
+        //percentButton.align
+
         //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
         //setSupportActionBar(toolbar);
@@ -107,20 +124,22 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 //            startActivityForResult(new Intent(this, NewUserActivity.class), INTENT_NEW_USER);   //TODO: considerar la posibilidad de hacerlo con un diálogo en lugar de un intent
 
 
+        resetStatistics(DatabaseHelper.SEXO.FEMALE);
+
 //        } else {
             getPreferences();
 //        }
 
-        resetStatistics(DatabaseHelper.SEXO.FEMALE);
 
-        setNames();
+
+        nextRound();
         textViewTitle.setText("Selecciona de los siguientes nombres el que más te gusta:");
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                buttonClicked(null);
+                nextRound(null);
                 /*Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();*/
             }
@@ -137,7 +156,10 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 
-        pref_userName = sharedPref.getString(getString(R.string.pref_userName), "");
+        pref_userName                   = sharedPref.getString(getString(R.string.pref_userName), "");
+        pref_totalVotacionesNecesarias  = sharedPref.getLong(getString(R.string.pref_totalVotesNeeded), getNumberOfNamesUsed());    //TODO: grabar totalNames la primera vez que se ejecuta y en el reset
+        pref_totalVotacionesHechas      = sharedPref.getLong(getString(R.string.pref_totalVotesDone), 0);                           //TODO: grabar antes de cerrar y cuando se reinicie
+
         setTitle(pref_userName);
     }
 
@@ -187,7 +209,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
 
 
-    private void setButtonsVisibility(boolean b){
+    private void setButtonsEnabled(boolean b){
         for (int i=0; i<layoutButtons.getChildCount(); i++){
             ( (Button)layoutButtons.getChildAt(i) ).setEnabled(b);
         }
@@ -201,8 +223,6 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         nombres = db.getUsedNamesByRandomAndCount(getNumberOfButtons());
 
-        setButtonsVisibility(false);
-
         i       = 0;
         for (Nombre n : nombres){
             b = (Button) layoutButtons.getChildAt(i++);
@@ -211,8 +231,6 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             b.setTag(n);
         }
         Log.d(DEBUG_TAG, "Set names: " + nombres);
-
-        setButtonsVisibility(true);
     }
 
 
@@ -265,28 +283,58 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
     @Override
     public void onClick(View v) {
-        buttonClicked(v);
+        nextRound(v);
     }
 
-    public void buttonClicked(View v){
+    public void nextRound(){ nextRound(null);}
+    public void nextRound(View v){
+        Nombre n;
+        float maxScore=0;
+
+        //setButtonsEnabled(false);
+
         //check end
-        if (getNumberOfNamesUsed() < DEFAULT_REMAINING_NAMES_TO_END){
+        if (getNumberOfNamesUsed() <= DEFAULT_REMAINING_NAMES_TO_END){
+            percentButton.setImageDrawable(new TextDrawable("100%"));
             showEndDialog(db.getHighestScoreName().nombre);
 
         } else {
-            db.raiseCount(layoutButtons);
+            if(v!=null) {
+                auxVotaciones++;
+                pref_totalVotacionesHechas +=getNumberOfButtons();
+                percentButton.setImageDrawable(new TextDrawable(String.valueOf(
+                        100*pref_totalVotacionesHechas / (2*pref_totalVotacionesNecesarias-1)
+                ) + "%"));
 
-            setNumberOfNamesForCountRound(getNumberOfNamesForCountRound()-getNumberOfButtons());
+                db.raiseCount(layoutButtons);
 
-            //check round
-            if (getNumberOfNamesForCountRound()<=0){
-                db.unUseLastNNamesByScore((int) (getNumberOfNamesUsed() / 2));
-                updateNumberOfNamesUsed();
-                updateNumberOfButtons();
-                updateNumberOfNamesForCountRound();
+                maxScore = 0;
+                for (int i = 0; i < layoutButtons.getChildCount(); i++) {
+                    n = (Nombre) layoutButtons.getChildAt(i).getTag();
+
+                    if (n.score > maxScore) {
+                        maxScore = n.score;
+                    }
+                }
+                db.updateScore((Nombre) v.getTag(), maxScore + (1 / (float) getNumberOfButtons()));
+
+                setNumberOfNamesForCountRound(getNumberOfNamesForCountRound() - getNumberOfButtons());
+
+                //check round
+                if (getNumberOfNamesForCountRound() <= 0) {
+                    db.unUseLastNNamesByScore((int) (getNumberOfNamesUsed() / 2));
+                    updateNumberOfNamesUsed();
+                    updateNumberOfButtons();
+                    updateNumberOfNamesForCountRound();
+                }
+
+            } else {
+                pref_totalVotacionesHechas =0;
+                percentButton.setImageDrawable(new TextDrawable("0%"));
             }
 
             setNames();
+            //setButtonsEnabled(true);
         }
     }
 
@@ -309,10 +357,36 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        //TODO: restart
+                        resetStatistics(DatabaseHelper.SEXO.FEMALE);
+                        updateNumberOfNamesUsed();
+                        updateNumberOfButtons();
+                        updateNumberOfNamesForCountRound();
+                        nextRound(null);
+                        auxVotaciones=0;
                     }
                 });
 
         builder.create().show();
+    }
+
+
+    private int calculateNumberOfVotesNeeded(long n){
+        int v=0, count=0, roundSize;
+        long remaining=n;
+
+        roundSize = getOptimalNumberOfButtons(remaining);
+        while (remaining > DEFAULT_REMAINING_NAMES_TO_END){
+            count += roundSize;
+
+            if(count>remaining){
+                v+=count;
+                remaining = (remaining/2);// - (count-remaining);
+
+                count=0;
+                roundSize = getOptimalNumberOfButtons(remaining);
+            }
+        }
+
+        return v+1;
     }
 }
