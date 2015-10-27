@@ -4,13 +4,18 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -25,42 +30,43 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private static final int DEFAULT_MIN_NUMBER_OF_BUTTONS = 2;
     private static final int DEFAULT_MAX_NUMBER_OF_BUTTONS = 8;
     private static final int DEFAULT_REMAINING_NAMES_TO_END = 2;
-    private final String DEBUG_TAG = "NameChooserMainActivity";
-    private TextView textViewTitle;
-    private LinearLayout layoutButtons;
-    private String  pref_userName;
-    private float pref_totalVotacionesNecesarias;
-    private long pref_totalVotacionesHechas;
-    private int auxVotaciones=0;
-    private boolean blockVotes = false;
+    private final String    DEBUG_TAG = "NameChooserMainActivity";
+    private TextView        textViewTitle;
+    private LinearLayout    layoutButtons;
+    private String          pref_userName;
+    private float           pref_totalVotacionesNecesarias;
+    private long            pref_totalVotacionesHechas;
+    private long            mLastClickTime;
 
-    private DatabaseHelper db = null;
-    private Long    _numberOfNamesUsed = null;              //USE getter and setter!
-    private Integer _numberOfButtons = null;                //USE getter and setter!
-    private Integer _numberOfNamesForCountRound = null;     //USE getter and setter!
+    private DatabaseHelper  db = null;
+    private Long            mNumberOfNamesUsed = null;              //USE getter and setter!
+    private Integer         mNumberOfButtons = null;                //USE getter and setter!
+    private Integer         mNumberOfNamesForCountRound = null;     //USE getter and setter!
+    private DatabaseHelper.SEXO mSexo;
+    private int                 mPercentSelected;
     private FloatingActionButton percentButton=null;
 
 
     private long updateNumberOfNamesUsed(){ return getNumberOfNamesUsed(true); }
     private long getNumberOfNamesUsed(){ return getNumberOfNamesUsed(false); }
     private long getNumberOfNamesUsed(boolean updateNumberOfNames){
-        if (updateNumberOfNames || _numberOfNamesUsed==null){
-            _numberOfNamesUsed = db.getUsedCount();
+        if (updateNumberOfNames || mNumberOfNamesUsed ==null){
+            mNumberOfNamesUsed = db.getUsedCount();
         }
-        return _numberOfNamesUsed;
+        return mNumberOfNamesUsed;
     }
 
     private int updateNumberOfButtons(){ return getNumberOfButtons(true); }
     private int getNumberOfButtons(){ return getNumberOfButtons(false); }
     private int getNumberOfButtons(boolean updateNumberOfButtons){
-        if(updateNumberOfButtons || _numberOfButtons==null){
+        if(updateNumberOfButtons || mNumberOfButtons ==null){
             Log.d(DEBUG_TAG, "Update number of buttons");
 
             //Calculate optimal number of buttons
-            _numberOfButtons = getOptimalNumberOfButtons(getNumberOfNamesUsed());
+            mNumberOfButtons = getOptimalNumberOfButtons(getNumberOfNamesUsed());
 
-            while (layoutButtons.getChildCount() != _numberOfButtons){
-                if(layoutButtons.getChildCount()> _numberOfButtons){
+            while (layoutButtons.getChildCount() != mNumberOfButtons){
+                if(layoutButtons.getChildCount()> mNumberOfButtons){
                     layoutButtons.removeViewAt(layoutButtons.getChildCount()-1);
 
                 } else {
@@ -70,7 +76,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                 }
             }
         }
-        return _numberOfButtons;
+        return mNumberOfButtons;
     }
 
     private int getOptimalNumberOfButtons(long n){
@@ -83,14 +89,14 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     }
 
 
-    private void setNumberOfNamesForCountRound(int i){ _numberOfNamesForCountRound=i; }
+    private void setNumberOfNamesForCountRound(int i){ mNumberOfNamesForCountRound =i; }
     private int updateNumberOfNamesForCountRound(){ return getNumberOfNamesForCountRound(true); }
     private int getNumberOfNamesForCountRound(){ return getNumberOfNamesForCountRound(false); }
     private int getNumberOfNamesForCountRound(boolean updateNumberOfRemainingSamples){
-        if(updateNumberOfRemainingSamples || _numberOfNamesForCountRound==null){
-            _numberOfNamesForCountRound = db.getNumberOfNamesWithLessCount();
+        if(updateNumberOfRemainingSamples || mNumberOfNamesForCountRound ==null){
+            mNumberOfNamesForCountRound = db.getNumberOfNamesWithLessCount();
         }
-        return _numberOfNamesForCountRound;
+        return mNumberOfNamesForCountRound;
     }
 
 
@@ -125,21 +131,14 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 //            startActivityForResult(new Intent(this, NewUserActivity.class), INTENT_NEW_USER);   //TODO: considerar la posibilidad de hacerlo con un diálogo en lugar de un intent
 
 
-        resetStatistics(DatabaseHelper.SEXO.FEMALE);
-
-//        } else {
-            getPreferences();
-//        }
+        showConfigDialog();
 
 
 
-        updateNumberOfNamesUsed();
-        updateNumberOfButtons();
-        updateNumberOfNamesForCountRound();
-        setNames();
+
 
         percentButton.setImageDrawable(new TextDrawable("0%"));
-        textViewTitle.setText("Selecciona de los siguientes nombres el que más te gusta:");
+        textViewTitle.setText("Selecciona de los siguientes nombres el que más te gusta:");     //FIXME: meter la frase en el layout
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -152,8 +151,75 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         });
     }
 
-    private void resetStatistics(DatabaseHelper.SEXO s) {
-        db.resetTable(s);
+    private void showConfigDialog() {
+        LayoutInflater layoutInflater = LayoutInflater.from(this);
+        //View promptView = layoutInflater.inflate(R.layout.input_dialog, null);
+        View promptView = layoutInflater.inflate(R.layout.initial_option_dialog, null, false);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setView(promptView);
+
+        ( (Spinner) promptView.findViewById(R.id.spinner) ).setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
+
+                mSexo = position==1 ? DatabaseHelper.SEXO.MALE : DatabaseHelper.SEXO.FEMALE;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        ( (SeekBar) promptView.findViewById(R.id.seekBar) ).setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
+
+                mPercentSelected = seekBar.getProgress();
+            }
+        });
+
+        // setup a dialog window
+        builder
+                .setTitle("Configuración")
+                .setIcon(android.R.drawable.ic_dialog_info)
+                .setCancelable(false)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        getPreferences();
+                        resetStatistics(mSexo, mPercentSelected);
+                    }
+                });
+
+        builder.create().show();
+    }
+
+
+    private void resetStatistics(DatabaseHelper.SEXO s, int percentSelected) {
+        db.resetTable(s, percentSelected);
+
+        updateNumberOfNamesUsed();
+        updateNumberOfButtons();
+        updateNumberOfNamesForCountRound();
+
+        pref_totalVotacionesNecesarias  = calculateNumberOfVotesNeeded(getNumberOfNamesUsed();
+        pref_totalVotacionesHechas      = 0;
+
+        savePreferences();
+        setNames();
     }
 
 
@@ -162,9 +228,9 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 
-        pref_userName                   = sharedPref.getString(getString(R.string.pref_userName), "");
-        pref_totalVotacionesNecesarias  = sharedPref.getInt(getString(R.string.pref_totalVotesNeeded), calculateNumberOfVotesNeeded(getNumberOfNamesUsed()));    //TODO: grabar totalNames la primera vez que se ejecuta y en el reset
-        pref_totalVotacionesHechas      = sharedPref.getLong(getString(R.string.pref_totalVotesDone), 0);                           //TODO: grabar antes de cerrar y cuando se reinicie
+        pref_userName                   = sharedPref.getString(getString(R.string.pref_userName), "DaN");
+        pref_totalVotacionesNecesarias  = sharedPref.getInt(getString(R.string.pref_totalVotesNeeded), calculateNumberOfVotesNeeded(getNumberOfNamesUsed()));   //TODO: grabar totalNames la primera vez que se ejecuta y en el reset
+        pref_totalVotacionesHechas      = sharedPref.getLong(getString(R.string.pref_totalVotesDone), 0);                                                       //TODO: grabar antes de cerrar y cuando se reinicie
 
         setTitle(pref_userName);
     }
@@ -217,14 +283,14 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
     private void setButtonsEnabled(boolean b){
         for (int i=0; i<layoutButtons.getChildCount(); i++){
-            ( (Button)layoutButtons.getChildAt(i) ).setEnabled(b);
+            layoutButtons.getChildAt(i).setEnabled(b);
         }
     }
 
 
     private void setNames(){
         ArrayList<Nombre> nombres;
-        int i=0;
+        int i;
         Button b;
 
         nombres = db.getUsedNamesByRandomAndCount(getNumberOfButtons());
@@ -289,7 +355,9 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
     @Override
     public void onClick(View v) {
-        if (!blockVotes) {
+        // Preventing multiple clicks
+        if (SystemClock.elapsedRealtime() - mLastClickTime > 500) {
+            mLastClickTime = SystemClock.elapsedRealtime();
             nextRound(v);
         }
     }
@@ -297,15 +365,13 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     public void nextRound(){ nextRound(null);}
     public void nextRound(View v){
         Nombre n;
-        float maxScore=0;
+        float maxScore;
 
         //setButtonsEnabled(false);
-        blockVotes = true;
 
-        auxVotaciones++;
-        pref_totalVotacionesHechas +=getNumberOfButtons();
+        pref_totalVotacionesHechas += getNumberOfButtons();
         percentButton.setImageDrawable(new TextDrawable(String.valueOf(
-                (int)Math.ceil(100*pref_totalVotacionesHechas / pref_totalVotacionesNecesarias)
+                (int) Math.floor(100 * pref_totalVotacionesHechas / pref_totalVotacionesNecesarias)
         ) + "%"));
 
         db.raiseCount(layoutButtons);
@@ -319,7 +385,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             }
         }
 
-        if(v!=null) {
+        if (v != null) {
             db.updateScore((Nombre) v.getTag(), maxScore + (1 / (float) getNumberOfButtons()));
         }
 
@@ -330,9 +396,9 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             percentButton.setImageDrawable(new TextDrawable("100%"));
             showEndDialog(db.getHighestScoreName().nombre);
 
-        //check round
+            //check round
         } else if (getNumberOfNamesForCountRound() <= 0) {
-            db.unUseLastNNamesByScore((int) Math.ceil(getNumberOfNamesUsed() / 2f));
+            db.unUseLastNNamesByScore((int) Math.floor(getNumberOfNamesUsed() / 2f));
             updateNumberOfNamesUsed();
             updateNumberOfButtons();
             updateNumberOfNamesForCountRound();
@@ -340,7 +406,6 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         setNames();
         //setButtonsEnabled(true);
-        blockVotes = false;
     }
 
 
@@ -362,12 +427,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        resetStatistics(DatabaseHelper.SEXO.FEMALE);
-                        updateNumberOfNamesUsed();
-                        updateNumberOfButtons();
-                        updateNumberOfNamesForCountRound();
-                        nextRound(null);
-                        auxVotaciones=0;
+                        resetStatistics();
                     }
                 });
 
@@ -375,25 +435,30 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     }
 
 
-    private int calculateNumberOfVotesNeeded(long n){
-        int totalVotes, buttons;
+    private int calculateNumberOfVotesNeeded(long n){ return calculateNumberOfVotesNeeded(n,false); }
+    private int calculateNumberOfVotesNeeded(long n, boolean clicks){
+        int ret, totalVotes, totalClicks, buttons;
         long used, votedInRound;
 
         used            = n;
+        totalClicks     = 0;
         totalVotes      = 0;
         votedInRound    = 0;
         buttons         = getOptimalNumberOfButtons(used);
         while (used > DEFAULT_REMAINING_NAMES_TO_END){
             votedInRound += buttons;
+            totalClicks++;
 
             if(votedInRound >= used){
                 totalVotes     += votedInRound;
                 votedInRound   -= used;
-                used            = (int)Math.ceil(used/2f);
+                used            = (int) Math.floor(used/2f);
                 buttons         = getOptimalNumberOfButtons(used);
             }
         }
 
-        return totalVotes;
+        ret = clicks ? totalClicks : totalVotes;
+
+        return ret;
     }
 }

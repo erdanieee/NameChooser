@@ -232,15 +232,48 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
+    private float getFreqMinForSexAndPercentNombres(SEXO s, int percentSelected){
+        Cursor c;
+        String[] proyection;
+        String selection, order;
+        String[] selectionArgs;
+        float count, freqMin=0;
 
-    public void resetTable (SEXO s){
+        proyection      = new String[]{TablaNombres._ID, TablaNombres.COL_NOMBRE, TablaNombres.COL_SCORE, TablaNombres.COL_COUNT};
+        selection       = TablaNombres.COL_SEXO + "=?";
+        selectionArgs   = new String[]{ s == SEXO.FEMALE ? FEMALE_SYMBOL : MALE_SYMBOL };
+        order           = TablaNombres.COL_FRECUENCIA + " DESC";
+
+        c = getReadableDatabase().query(TablaNombres.TABLA, proyection, selection, selectionArgs, null, null, order);
+
+        count=0;
+        while(c.moveToNext()){
+            count++;
+
+            if (Math.round(100*count/c.getCount())>=percentSelected) {
+                freqMin = c.getFloat(c.getColumnIndex(TablaNombres.COL_FRECUENCIA));
+                break;
+            }
+        }
+        c.close();
+
+        return freqMin;
+    }
+
+
+    public void resetTable(SEXO s, int percentSelected){
         SQLiteDatabase db;
         ContentValues values;
         String selection;
         String[] selectionArgs;
+        long total;
+        float freqMin;
+
+        //calculate freqMin
+        freqMin = getFreqMinForSexAndPercentNombres(s,percentSelected);
 
         values = new ContentValues();
-        selection = TablaNombres.COL_SEXO + "=?";
+        selection = TablaNombres.COL_SEXO + "=? AND " + TablaNombres.COL_FRECUENCIA + " >=?" ;
         db = getWritableDatabase();
 
         try {
@@ -250,14 +283,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             values.put(TablaNombres.COL_USED, 1);
             values.put(TablaNombres.COL_SCORE, 0);
             values.put(TablaNombres.COL_COUNT, 0);
-            selectionArgs = new String[]{s==SEXO.FEMALE ? FEMALE_SYMBOL : MALE_SYMBOL};
+            selectionArgs = new String[]{
+                    s==SEXO.FEMALE ? FEMALE_SYMBOL : MALE_SYMBOL,
+                    String.valueOf(freqMin)
+            };
             db.update(TablaNombres.TABLA, values, selection, selectionArgs);
 
             values.clear();
             values.put(TablaNombres.COL_USED, 0);
             values.put(TablaNombres.COL_SCORE, 0);
             values.put(TablaNombres.COL_COUNT, 0);
-            selectionArgs = new String[]{s==SEXO.FEMALE ? MALE_SYMBOL : FEMALE_SYMBOL};
+            selectionArgs = new String[]{
+                    s==SEXO.FEMALE ? MALE_SYMBOL : FEMALE_SYMBOL,
+                    String.valueOf(freqMin)
+            };
             db.update(TablaNombres.TABLA, values, selection, selectionArgs);
 
             db.setTransactionSuccessful();
