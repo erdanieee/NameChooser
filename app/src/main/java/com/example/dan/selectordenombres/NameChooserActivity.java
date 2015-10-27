@@ -24,14 +24,15 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private static final int DEFAULT_NUMBER_CLICK_ROUND = 30;       //TODO: obtener esto como una preferencia al inicio
     private static final int DEFAULT_MIN_NUMBER_OF_BUTTONS = 2;
     private static final int DEFAULT_MAX_NUMBER_OF_BUTTONS = 8;
-    private static final int DEFAULT_REMAINING_NAMES_TO_END = 1;
+    private static final int DEFAULT_REMAINING_NAMES_TO_END = 2;
     private final String DEBUG_TAG = "NameChooserMainActivity";
     private TextView textViewTitle;
     private LinearLayout layoutButtons;
     private String  pref_userName;
-    private long pref_totalVotacionesNecesarias;
+    private float pref_totalVotacionesNecesarias;
     private long pref_totalVotacionesHechas;
     private int auxVotaciones=0;
+    private boolean blockVotes = false;
 
     private DatabaseHelper db = null;
     private Long    _numberOfNamesUsed = null;              //USE getter and setter!
@@ -132,8 +133,12 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
 
 
-        nextRound(); //FIXME: hacer que la primera ronda no sume count
+        updateNumberOfNamesUsed();
+        updateNumberOfButtons();
+        updateNumberOfNamesForCountRound();
+        setNames();
 
+        percentButton.setImageDrawable(new TextDrawable("0%"));
         textViewTitle.setText("Selecciona de los siguientes nombres el que más te gusta:");
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -158,7 +163,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 
         pref_userName                   = sharedPref.getString(getString(R.string.pref_userName), "");
-        pref_totalVotacionesNecesarias  = sharedPref.getLong(getString(R.string.pref_totalVotesNeeded), getNumberOfNamesUsed());    //TODO: grabar totalNames la primera vez que se ejecuta y en el reset
+        pref_totalVotacionesNecesarias  = sharedPref.getInt(getString(R.string.pref_totalVotesNeeded), calculateNumberOfVotesNeeded(getNumberOfNamesUsed()));    //TODO: grabar totalNames la primera vez que se ejecuta y en el reset
         pref_totalVotacionesHechas      = sharedPref.getLong(getString(R.string.pref_totalVotesDone), 0);                           //TODO: grabar antes de cerrar y cuando se reinicie
 
         setTitle(pref_userName);
@@ -284,56 +289,58 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
     @Override
     public void onClick(View v) {
-        nextRound(v);
+        if (!blockVotes) {
+            nextRound(v);
+        }
     }
 
-    public void nextRound(){ nextRound(null);}          //FIXME: diferenciar null cuando es la primera llamada de cuando se pulsa el botón skip!!!!!
+    public void nextRound(){ nextRound(null);}
     public void nextRound(View v){
         Nombre n;
         float maxScore=0;
 
         //setButtonsEnabled(false);
+        blockVotes = true;
+
+        auxVotaciones++;
+        pref_totalVotacionesHechas +=getNumberOfButtons();
+        percentButton.setImageDrawable(new TextDrawable(String.valueOf(
+                (int)Math.ceil(100*pref_totalVotacionesHechas / pref_totalVotacionesNecesarias)
+        ) + "%"));
+
+        db.raiseCount(layoutButtons);
+
+        maxScore = 0;
+        for (int i = 0; i < layoutButtons.getChildCount(); i++) {
+            n = (Nombre) layoutButtons.getChildAt(i).getTag();
+
+            if (n.score > maxScore) {
+                maxScore = n.score;
+            }
+        }
+
+        if(v!=null) {
+            db.updateScore((Nombre) v.getTag(), maxScore + (1 / (float) getNumberOfButtons()));
+        }
+
+        setNumberOfNamesForCountRound(getNumberOfNamesForCountRound() - getNumberOfButtons());
 
         //check end
-        if (getNumberOfNamesUsed() <= DEFAULT_REMAINING_NAMES_TO_END){
+        if (getNumberOfNamesUsed() <= DEFAULT_REMAINING_NAMES_TO_END) {
             percentButton.setImageDrawable(new TextDrawable("100%"));
             showEndDialog(db.getHighestScoreName().nombre);
 
-        } else {
-            auxVotaciones++;
-            pref_totalVotacionesHechas +=getNumberOfButtons();
-            percentButton.setImageDrawable(new TextDrawable(String.valueOf(
-                    100*pref_totalVotacionesHechas / (2*pref_totalVotacionesNecesarias+1)
-            ) + "%"));
-
-            db.raiseCount(layoutButtons);
-
-            maxScore = 0;
-            for (int i = 0; i < layoutButtons.getChildCount(); i++) {
-                n = (Nombre) layoutButtons.getChildAt(i).getTag();
-
-                if (n.score > maxScore) {
-                    maxScore = n.score;
-                }
-            }
-
-            if(v!=null) {
-                db.updateScore((Nombre) v.getTag(), maxScore + (1 / (float) getNumberOfButtons()));
-            }
-
-            setNumberOfNamesForCountRound(getNumberOfNamesForCountRound() - getNumberOfButtons());
-
-            //check round
-            if (getNumberOfNamesForCountRound() <= 0) {
-                db.unUseLastNNamesByScore((int) (getNumberOfNamesUsed() / 2));
-                updateNumberOfNamesUsed();
-                updateNumberOfButtons();
-                updateNumberOfNamesForCountRound();
-            }
-
-            setNames();
-            //setButtonsEnabled(true);
+        //check round
+        } else if (getNumberOfNamesForCountRound() <= 0) {
+            db.unUseLastNNamesByScore((int) Math.ceil(getNumberOfNamesUsed() / 2f));
+            updateNumberOfNamesUsed();
+            updateNumberOfButtons();
+            updateNumberOfNamesForCountRound();
         }
+
+        setNames();
+        //setButtonsEnabled(true);
+        blockVotes = false;
     }
 
 
@@ -369,22 +376,24 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
 
     private int calculateNumberOfVotesNeeded(long n){
-        int v=0, count=0, roundSize;
-        long remaining=n;
+        int totalVotes, buttons;
+        long used, votedInRound;
 
-        roundSize = getOptimalNumberOfButtons(remaining);
-        while (remaining > DEFAULT_REMAINING_NAMES_TO_END){
-            count += roundSize;
+        used            = n;
+        totalVotes      = 0;
+        votedInRound    = 0;
+        buttons         = getOptimalNumberOfButtons(used);
+        while (used > DEFAULT_REMAINING_NAMES_TO_END){
+            votedInRound += buttons;
 
-            if(count>remaining){
-                v+=count;
-                remaining = (remaining/2);// - (count-remaining);
-
-                count=0;
-                roundSize = getOptimalNumberOfButtons(remaining);
+            if(votedInRound >= used){
+                totalVotes     += votedInRound;
+                votedInRound   -= used;
+                used            = (int)Math.ceil(used/2f);
+                buttons         = getOptimalNumberOfButtons(used);
             }
         }
 
-        return v+1;
+        return totalVotes;
     }
 }
