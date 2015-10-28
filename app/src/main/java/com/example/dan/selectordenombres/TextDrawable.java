@@ -16,9 +16,13 @@ public class TextDrawable extends Drawable {
 
     private final String text;
     private final Paint paint;
+    private final int width, height;
 
-    public TextDrawable(String text) {
+
+    public TextDrawable(String text, int width, int height) {
         this.text = text;
+        this.width = width;
+        this.height = height;
 
         this.paint = new Paint();
         paint.setColor(Color.WHITE);
@@ -33,9 +37,9 @@ public class TextDrawable extends Drawable {
 
     @Override
     public void draw(Canvas canvas) {
-
         // the display area.
-        Rect areaRect = new Rect(0, 0, 40, 40);
+        Rect areaRect = new Rect(0, 0, width, height);
+        //Rect areaRect = new Rect(0, 0, canvas.getWidth(), canvas.getHeight());
 
         //canvas.drawRect(areaRect, paint);
 

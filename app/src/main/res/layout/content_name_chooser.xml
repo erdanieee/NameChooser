@@ -10,14 +10,14 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:showIn="@layout/activity_name_chooser" tools:context=".NameChooserActivity">
 
-    <TextView android:text="Hello World!"
+    <TextView android:text="@string/text_select_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/TextViewTitle"/>
 
     <Space
-        android:layout_width="20px"
-        android:layout_height="20px" />
+        android:layout_width="20dp"
+        android:layout_height="20dp" />
 
     <LinearLayout
         android:orientation="vertical"

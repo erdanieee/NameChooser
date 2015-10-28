@@ -239,7 +239,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String[] selectionArgs;
         float count, freqMin=0;
 
-        proyection      = new String[]{TablaNombres._ID, TablaNombres.COL_NOMBRE, TablaNombres.COL_SCORE, TablaNombres.COL_COUNT};
+        proyection      = new String[]{TablaNombres.COL_FRECUENCIA};
         selection       = TablaNombres.COL_SEXO + "=?";
         selectionArgs   = new String[]{ s == SEXO.FEMALE ? FEMALE_SYMBOL : MALE_SYMBOL };
         order           = TablaNombres.COL_FRECUENCIA + " DESC";
@@ -261,7 +261,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    public void resetTable(SEXO s, int percentSelected){
+    public void resetTable(SEXO s, int percentSelected){        //TODO: change percent selected by decil
         SQLiteDatabase db;
         ContentValues values;
         String selection;
@@ -280,21 +280,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             db.beginTransaction();
 
             values.clear();
+            values.put(TablaNombres.COL_USED, 0);
+            db.update(TablaNombres.TABLA,values,null,null);
+
+            values.clear();
             values.put(TablaNombres.COL_USED, 1);
             values.put(TablaNombres.COL_SCORE, 0);
             values.put(TablaNombres.COL_COUNT, 0);
             selectionArgs = new String[]{
                     s==SEXO.FEMALE ? FEMALE_SYMBOL : MALE_SYMBOL,
-                    String.valueOf(freqMin)
-            };
-            db.update(TablaNombres.TABLA, values, selection, selectionArgs);
-
-            values.clear();
-            values.put(TablaNombres.COL_USED, 0);
-            values.put(TablaNombres.COL_SCORE, 0);
-            values.put(TablaNombres.COL_COUNT, 0);
-            selectionArgs = new String[]{
-                    s==SEXO.FEMALE ? MALE_SYMBOL : FEMALE_SYMBOL,
                     String.valueOf(freqMin)
             };
             db.update(TablaNombres.TABLA, values, selection, selectionArgs);
