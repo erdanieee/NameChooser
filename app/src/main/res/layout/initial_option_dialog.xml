@@ -58,4 +58,14 @@
         android:layout_alignRight="@+id/seekBar"
         android:layout_alignEnd="@+id/seekBar" />
 
+    <Switch
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Modo ultrarápido"
+        android:id="@+id/switch1"
+        android:layout_below="@+id/textViewCount"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="@dimen/abc_dialog_padding_material" />
+
 </RelativeLayout>

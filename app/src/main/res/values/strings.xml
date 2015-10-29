@@ -17,4 +17,5 @@
     <string name="pref_totalVotesNeeded">pref_totalNames</string>
     <string name="pref_totalVotesDone">pref_totalVotes</string>
     <string name="text_select_name">Selecciona de los siguientes nombres el que más te gusta:</string>
+    <string name="pref_continueSearch">pref_continueSearch</string>
 </resources>

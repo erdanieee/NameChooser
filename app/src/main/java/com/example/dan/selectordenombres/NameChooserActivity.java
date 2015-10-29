@@ -55,12 +55,12 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private Long                mNumberOfNamesUsed          = null;             //USE getter and setter!
     private Integer             mNumberOfButtons            = null;             //USE getter and setter!
     private Integer             mNumberOfNamesForCountRound = null;             //USE getter and setter!
-    private DatabaseHelper.SEXO mSexo;
-    private int                 mPercentSelected;
     private AlertDialog         mConfigDialog=null;
     private float               mTotalVotacionesNecesarias;
-    private TextView            mTextViewCount;
-
+    private TextView            mTextViewCountConfig;
+    private ToggleButton        mToggleButtonConfig;
+    private SeekBar             mSeekBarConfig;
+    private boolean             mContinueSearch;
 
 
 
@@ -126,7 +126,6 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         mLayoutButtons  = (LinearLayout)findViewById(R.id.linearLayoutButtons);
         percentButton   = (FloatingActionButton)findViewById(R.id.porcentaje);
         mDb             = new DatabaseHelper(this);
-        mPercentSelected= getResources().getInteger(R.integer.default_percent_selected);
 
         /*Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);*/
@@ -144,10 +143,22 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         showConfigDialog();     //FIXME: comprobar si ya hay una ejecución en marcha y reiniciarla
     }
 
+
+    private void getPreferences() {
+        SharedPreferences sharedPref;
+
+        sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+
+        pref_totalVotacionesHechas  = sharedPref.getLong(getString(R.string.pref_totalVotesDone), 0);        //TODO: grabar antes de cerrar y cuando se reinicie
+        mContinueSearch             = sharedPref.getBoolean(getString(R.string.pref_continueSearch), false);
+    }
+
+
     @Override
     protected void onStop() {
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
         editor.putLong(getString(R.string.pref_totalVotesDone), pref_totalVotacionesHechas);
+        editor.putBoolean(getString(R.string.pref_continueSearch), mContinueSearch);
         editor.apply();
 
         super.onStop();
@@ -157,45 +168,28 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         LayoutInflater layoutInflater;
         AlertDialog.Builder builder;
         View promptView;
-        //Spinner spinner;
-        SeekBar seekBar;
-        ToggleButton tb;
+
 
         if(mConfigDialog==null) {
             layoutInflater  = LayoutInflater.from(this);
             promptView      = layoutInflater.inflate(R.layout.initial_option_dialog, null, false);
             builder         = new AlertDialog.Builder(this);
-            //spinner       = (Spinner) promptView.findViewById(R.id.spinner);
-            seekBar         = (SeekBar) promptView.findViewById(R.id.seekBar);
-            tb              = (ToggleButton) promptView.findViewById(R.id.toggleButton);
-            mTextViewCount  = (TextView) promptView.findViewById(R.id.textViewCount);
 
-            builder.setView(promptView);
+            mTextViewCountConfig    = (TextView) promptView.findViewById(R.id.textViewCount);
+            mSeekBarConfig          = (SeekBar) promptView.findViewById(R.id.seekBar);
+            mToggleButtonConfig     = (ToggleButton) promptView.findViewById(R.id.toggleButton);
 
-            tb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            mToggleButtonConfig.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    mSexo = isChecked ? DatabaseHelper.SEXO.MALE : DatabaseHelper.SEXO.FEMALE;
-                    mTextViewCount.setText(String.valueOf(mDb.getCountSexo(mSexo)*mPercentSelected/100));
+                    updateTextViewNumberOfNames();
                 }
             });
 
-            /*spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onNothingSelected(AdapterView<?> parent) {
-                }
-
-                @Override
-                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    mSexo = position == 0 ? DatabaseHelper.SEXO.MALE : DatabaseHelper.SEXO.FEMALE;
-                }
-            });*/
-
-            seekBar.getProgressDrawable().setColorFilter(new LightingColorFilter(0xFF000000, Color.rgb((int) Math.round(seekBar.getProgress() * 2.55), (int) Math.round((seekBar.getMax() - seekBar.getProgress()) * 2.55), 0)));
-            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            mSeekBarConfig.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                    seekBar.getProgressDrawable().setColorFilter(new LightingColorFilter(0xFF000000, Color.rgb((int) Math.round(progress * 2.55), (int) Math.round((seekBar.getMax() - progress) * 2.55), 0)));
+                    updateSeekBarConfigColor();
                 }
 
                 @Override
@@ -204,32 +198,58 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
                 @Override
                 public void onStopTrackingTouch(SeekBar seekBar) {
-                    mPercentSelected = seekBar.getProgress() + 1;       //TODO: change percent selected by decil
-                    mTextViewCount.setText(String.valueOf(mDb.getCountSexo(mSexo)*mPercentSelected/100));
+                    updateTextViewNumberOfNames();
                 }
             });
 
-            // setup a dialog window
+            updateTextViewNumberOfNames();
+            updateSeekBarConfigColor();
+
+            builder.setView(promptView);
             builder
                     .setTitle("Configuración")
                     .setIcon(android.R.drawable.ic_dialog_info)
                     .setOnCancelListener(new DialogInterface.OnCancelListener() {
                         @Override
                         public void onCancel(DialogInterface dialog) {
-                            resetStatistics(mSexo, mPercentSelected);
-
+                            resetStatistics(getSexOptionDialog(), getPercentOptionDialog());
+                            mContinueSearch = true;
                         }
                     })
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            resetStatistics(mSexo, mPercentSelected);
+                            resetStatistics(getSexOptionDialog(), getPercentOptionDialog());
+                            mContinueSearch = true;
                         }
                     });
 
             mConfigDialog = builder.create();
         }
         mConfigDialog.show();
+    }
+
+    private void updateSeekBarConfigColor(){
+        mSeekBarConfig.getProgressDrawable().setColorFilter(
+                new LightingColorFilter(
+                        0xFF000000,
+                        Color.rgb(
+                                (int) Math.round(mSeekBarConfig.getProgress() * 2.55),
+                                (int) Math.round((mSeekBarConfig.getMax() - mSeekBarConfig.getProgress()) * 2.55),
+                                0)));
+    }
+
+
+    private void updateTextViewNumberOfNames() {
+        mTextViewCountConfig.setText(String.valueOf(mDb.getCountSexo(getSexOptionDialog()) * getPercentOptionDialog() / 100));
+    }
+
+    private DatabaseHelper.SEXO getSexOptionDialog(){
+        return mToggleButtonConfig.isChecked() ? DatabaseHelper.SEXO.MALE : DatabaseHelper.SEXO.FEMALE;
+    }
+
+    private int getPercentOptionDialog(){
+        return mSeekBarConfig.getProgress() + 1;       //TODO: change percent selected by decil
     }
 
 
@@ -245,13 +265,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     }
 
 
-    private void getPreferences() {
-        SharedPreferences sharedPref;
 
-        sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-
-        pref_totalVotacionesHechas = sharedPref.getLong(getString(R.string.pref_totalVotesDone), 0);        //TODO: grabar antes de cerrar y cuando se reinicie
-    }
 
 
     private void setNames(){
