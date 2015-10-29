@@ -3,6 +3,8 @@ package com.example.dan.selectordenombres;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.LightingColorFilter;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
@@ -17,6 +19,7 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import java.util.ArrayList;
@@ -56,6 +59,9 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private int                 mPercentSelected;
     private AlertDialog         mConfigDialog=null;
     private float               mTotalVotacionesNecesarias;
+    private TextView            mTextViewCount;
+
+
 
 
     private long updateNumberOfNamesUsed(){ return getNumberOfNamesUsed(true); }
@@ -140,12 +146,11 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
     @Override
     protected void onStop() {
-        super.onStop();
-
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
         editor.putLong(getString(R.string.pref_totalVotesDone), pref_totalVotacionesHechas);
         editor.apply();
 
+        super.onStop();
     }
 
     private void showConfigDialog() {
@@ -157,12 +162,13 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         ToggleButton tb;
 
         if(mConfigDialog==null) {
-            layoutInflater = LayoutInflater.from(this);
-            promptView = layoutInflater.inflate(R.layout.initial_option_dialog, null, false);
-            builder = new AlertDialog.Builder(this);
-            //spinner = (Spinner) promptView.findViewById(R.id.spinner);
-            seekBar = (SeekBar) promptView.findViewById(R.id.seekBar);
-            tb      = (ToggleButton) promptView.findViewById(R.id.toggleButton);
+            layoutInflater  = LayoutInflater.from(this);
+            promptView      = layoutInflater.inflate(R.layout.initial_option_dialog, null, false);
+            builder         = new AlertDialog.Builder(this);
+            //spinner       = (Spinner) promptView.findViewById(R.id.spinner);
+            seekBar         = (SeekBar) promptView.findViewById(R.id.seekBar);
+            tb              = (ToggleButton) promptView.findViewById(R.id.toggleButton);
+            mTextViewCount  = (TextView) promptView.findViewById(R.id.textViewCount);
 
             builder.setView(promptView);
 
@@ -170,6 +176,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     mSexo = isChecked ? DatabaseHelper.SEXO.MALE : DatabaseHelper.SEXO.FEMALE;
+                    mTextViewCount.setText(String.valueOf(mDb.getCountSexo(mSexo)*mPercentSelected/100));
                 }
             });
 
@@ -184,9 +191,11 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                 }
             });*/
 
+            seekBar.getProgressDrawable().setColorFilter(new LightingColorFilter(0xFF000000, Color.rgb((int) Math.round(seekBar.getProgress() * 2.55), (int) Math.round((seekBar.getMax() - seekBar.getProgress()) * 2.55), 0)));
             seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    seekBar.getProgressDrawable().setColorFilter(new LightingColorFilter(0xFF000000, Color.rgb((int) Math.round(progress * 2.55), (int) Math.round((seekBar.getMax() - progress) * 2.55), 0)));
                 }
 
                 @Override
@@ -195,7 +204,8 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
                 @Override
                 public void onStopTrackingTouch(SeekBar seekBar) {
-                    mPercentSelected = seekBar.getProgress()+1;       //TODO: change percent selected by decil
+                    mPercentSelected = seekBar.getProgress() + 1;       //TODO: change percent selected by decil
+                    mTextViewCount.setText(String.valueOf(mDb.getCountSexo(mSexo)*mPercentSelected/100));
                 }
             });
 
@@ -203,7 +213,13 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             builder
                     .setTitle("Configuración")
                     .setIcon(android.R.drawable.ic_dialog_info)
-                    .setCancelable(false)
+                    .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                        @Override
+                        public void onCancel(DialogInterface dialog) {
+                            resetStatistics(mSexo, mPercentSelected);
+
+                        }
+                    })
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -374,7 +390,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         totalVotes      = 0;
         votedInRound    = 0;
         buttons         = getOptimalNumberOfButtons(used);
-        while (used > DEFAULT_REMAINING_NAMES_TO_END){
+        while (used >= DEFAULT_REMAINING_NAMES_TO_END){
             votedInRound += buttons;
             totalClicks++;
 
@@ -388,6 +404,6 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         ret = clicks ? totalClicks : totalVotes;
 
-        return ret;
+        return ret+1;
     }
 }

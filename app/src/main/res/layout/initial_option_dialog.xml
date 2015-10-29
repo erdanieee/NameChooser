@@ -9,34 +9,34 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Por favor, selecciona el sexo de tu bebé:"
+        android:text="Selecciona el sexo de tu bebé:"
         android:id="@+id/textView6"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:labelFor="@+id/spinner" />
 
     <ToggleButton
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="New ToggleButton"
         android:id="@+id/toggleButton"
-        android:textOn="Niño"
-        android:textOff="Niña"
+        android:textOn="Masculino"
+        android:textOff="Femenino"
         android:textStyle="italic"
         android:layout_below="@+id/textView6"
+        android:background="@android:drawable/btn_default"
         android:checked="true" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Selecciona el número de nombres:"
+        android:text="Utiliza la barra deslizante inferior para buscar solo entre los nombres más frecuentes."
         android:id="@+id/textView7"
         android:labelFor="@+id/seekBar"
         android:layout_below="@+id/toggleButton"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_marginTop="@dimen/abc_alert_dialog_button_bar_height" />
+        android:layout_marginTop="@dimen/abc_dialog_padding_material" />
 
     <SeekBar
         android:layout_width="fill_parent"
@@ -47,5 +47,15 @@
         android:layout_alignParentStart="true"
         android:progress="@integer/default_percent_selected"
         android:max="99" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text=""
+        android:id="@+id/textViewCount"
+        android:layout_below="@+id/seekBar"
+        android:layout_alignRight="@+id/seekBar"
+        android:layout_alignEnd="@+id/seekBar" />
 
 </RelativeLayout>

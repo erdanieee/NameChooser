@@ -85,6 +85,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
+    public long getCountSexo(SEXO s){
+        String selection;
+        String[] selectionArgs;
+
+        selection       = TablaNombres.COL_SEXO+"=?";
+        selectionArgs   = new String[]{s == SEXO.FEMALE ? FEMALE_SYMBOL : MALE_SYMBOL};
+
+        return count(TablaNombres.TABLA, selection,selectionArgs);
+    }
+
+
     private long count(String table, String selection, String[] selectionArgs){
         long c;
         c = DatabaseUtils.queryNumEntries(getReadableDatabase(), table, selection, selectionArgs);
