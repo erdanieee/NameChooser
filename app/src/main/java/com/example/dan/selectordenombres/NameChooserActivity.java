@@ -132,7 +132,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             }
         });
 
-        percentButton.setImageDrawable(new TextDrawable("0%", percentButton.getWidth(), percentButton.getHeight()));
+        percentButton.setImageDrawable(new TextDrawable("0%"));
         getPreferences();
 
         showConfigDialog();     //FIXME: comprobar si ya hay una ejecución en marcha y reiniciarla
@@ -223,7 +223,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         mTotalVotacionesNecesarias = calculateNumberOfVotesNeeded(getNumberOfNamesUsed());
         pref_totalVotacionesHechas = 0;
 
-        percentButton.setImageDrawable(new TextDrawable("0%", percentButton.getWidth(), percentButton.getHeight()));
+        percentButton.setImageDrawable(new TextDrawable("0%"));
 
         nextRound(null, true);
     }
@@ -306,7 +306,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             pref_totalVotacionesHechas += getNumberOfButtons();
             percentButton.setImageDrawable(new TextDrawable(String.valueOf(
                     (int) Math.floor(100 * pref_totalVotacionesHechas / mTotalVotacionesNecesarias)
-            ) + "%", percentButton.getWidth(), percentButton.getHeight()));
+            ) + "%"));
 
             mDb.raiseCount(mLayoutButtons);
 
@@ -327,7 +327,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
             //check end
             if (getNumberOfNamesUsed() <= DEFAULT_REMAINING_NAMES_TO_END) {
-                percentButton.setImageDrawable(new TextDrawable("100%", percentButton.getWidth(), percentButton.getHeight()));
+                percentButton.setImageDrawable(new TextDrawable("100%"));
                 showEndDialog(mDb.getHighestScoreName().nombre);
 
                 //check round
