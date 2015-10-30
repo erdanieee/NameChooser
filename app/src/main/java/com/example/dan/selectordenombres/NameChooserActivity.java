@@ -32,11 +32,6 @@ import database.Nombre;
 
 //TODO: Compartir en facebook los resultados cuando se encuentre un nombre común entre la pareja.
 
-//TODO: quantiles:  0%      10%     20%     30%     40%     50%     60%     70%     80%     90%     100%
-//TODO:             0.0040  0.0050  0.0060  0.0080  0.0110  0.0160  0.0260  0.0480  0.1018  0.3398  29.2160
-//TODO:             2437    2258    2048    1769    1489    1235    982     735     488     244     1
-
-
 
 public class NameChooserActivity extends AppCompatActivity implements View.OnClickListener{
     private static final int    DEFAULT_NUMBER_CLICK_ROUND      = 30;       //TODO: obtener esto como una preferencia al inicio
@@ -145,7 +140,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             nextRound(null, true);
 
         } else {
-            showConfigDialog();     //FIXME: comprobar si ya hay una ejecución en marcha y reiniciarla
+            showConfigDialog();
         }
     }
 
@@ -155,7 +150,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 
-        pref_totalVotacionesHechas      = sharedPref.getLong(getString(R.string.pref_totalVotesDone), 0);        //TODO: grabar antes de cerrar y cuando se reinicie
+        pref_totalVotacionesHechas      = sharedPref.getLong(getString(R.string.pref_totalVotesDone), 0);
         pref_totalVotacionesNecesarias  = sharedPref.getFloat(getString(R.string.pref_totalVotesNeeded), 0);      //Default=0 porque ya se calculará cuando se reinicien las estadísticas
         mContinueSearch                 = sharedPref.getBoolean(getString(R.string.pref_continueSearch), false);
         mFastMode                       = sharedPref.getBoolean(getString(R.string.pref_fastMode), false);
@@ -261,7 +256,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
 
     private int getPercentOptionDialog(){
-        return mSeekBarConfig.getProgress() + 1;       //TODO: change percent selected by decil
+        return mSeekBarConfig.getProgress() + 1;
     }
 
 
@@ -450,7 +445,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
 
 
-    protected void showEndDialog(String winnerName) {
+    protected void showEndDialog(String winnerName) {                   //TODO: mostrar botón de donar
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         // setup a dialog window
