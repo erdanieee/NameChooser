@@ -19,6 +19,7 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
@@ -61,6 +62,8 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private ToggleButton        mToggleButtonConfig;
     private SeekBar             mSeekBarConfig;
     private boolean             mContinueSearch;
+    private boolean             mFastMode;
+    private Switch              mFastModeSwitch;
 
 
 
@@ -157,6 +160,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         pref_totalVotacionesHechas      = sharedPref.getLong(getString(R.string.pref_totalVotesDone), 0);        //TODO: grabar antes de cerrar y cuando se reinicie
         pref_totalVotacionesNecesarias  = sharedPref.getFloat(getString(R.string.pref_totalVotesNeeded), 0);      //Default=0 porque ya se calculará cuando se reinicien las estadísticas
         mContinueSearch                 = sharedPref.getBoolean(getString(R.string.pref_continueSearch), false);
+        mFastMode                       = sharedPref.getBoolean(getString(R.string.pref_fastMode), false);
     }
 
 
@@ -164,8 +168,8 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     protected void onStop() {
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
         editor.putLong(getString(R.string.pref_totalVotesDone), pref_totalVotacionesHechas);
-        editor.putBoolean(getString(R.string.pref_continueSearch), mContinueSearch);
         editor.putFloat(getString(R.string.pref_totalVotesNeeded), pref_totalVotacionesNecesarias);
+        editor.putBoolean(getString(R.string.pref_fastMode), mFastMode);
         editor.apply();
 
         mDb.close();
@@ -187,6 +191,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             mTextViewCountConfig    = (TextView) promptView.findViewById(R.id.textViewCount);
             mSeekBarConfig          = (SeekBar) promptView.findViewById(R.id.seekBar);
             mToggleButtonConfig     = (ToggleButton) promptView.findViewById(R.id.toggleButton);
+            mFastModeSwitch         = (Switch) promptView.findViewById(R.id.switch1);
 
             mToggleButtonConfig.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
@@ -221,13 +226,13 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                     .setOnCancelListener(new DialogInterface.OnCancelListener() {
                         @Override
                         public void onCancel(DialogInterface dialog) {
-                            resetStatistics(getSexOptionDialog(), getPercentOptionDialog());
+                            resetStatistics(getSexOptionDialog(), getPercentOptionDialog(), mFastModeSwitch.isChecked());
                         }
                     })
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            resetStatistics(getSexOptionDialog(), getPercentOptionDialog());
+                            resetStatistics(getSexOptionDialog(), getPercentOptionDialog(), mFastModeSwitch.isChecked());
                         }
                     });
 
@@ -251,22 +256,23 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         mTextViewCountConfig.setText(String.valueOf(mDb.getCountSexo(getSexOptionDialog()) * getPercentOptionDialog() / 100));
     }
 
+
     private DatabaseHelper.SEXO getSexOptionDialog(){
         return mToggleButtonConfig.isChecked() ? DatabaseHelper.SEXO.MALE : DatabaseHelper.SEXO.FEMALE;
     }
+
 
     private int getPercentOptionDialog(){
         return mSeekBarConfig.getProgress() + 1;       //TODO: change percent selected by decil
     }
 
 
-    private void resetStatistics(DatabaseHelper.SEXO s, int percentSelected) {
+    private void resetStatistics(DatabaseHelper.SEXO s, int percentSelected, boolean fastMode) {
         mDb.resetTable(s, percentSelected);
 
-        pref_totalVotacionesNecesarias = calculateNumberOfVotesNeeded(getNumberOfNamesUsed());
-        pref_totalVotacionesHechas = 0;
-
-        percentButton.setImageDrawable(new TextDrawable("0%"));
+        mFastMode                       = fastMode;
+        pref_totalVotacionesHechas      = 0;
+        pref_totalVotacionesNecesarias  = calculateNumberOfVotesNeeded(getNumberOfNamesUsed());
 
         nextRound(null, true);
     }
@@ -282,7 +288,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         nombres = mDb.getUsedNamesByRandomAndCount(getNumberOfButtons());
 
-        i       = 0;
+        i = 0;
         for (Nombre n : nombres){
             b = (Button) mLayoutButtons.getChildAt(i++);
 
@@ -379,7 +385,15 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
                 //check round
             } else if (getNumberOfNamesForCountRound() <= 0) {
-                mDb.unUseLastNNamesByScore((int) Math.floor(getNumberOfNamesUsed() / 2f));          //TODO: en modo "fast" dividir entre el número de botones
+                int unUseCount=0;
+                if (mFastMode){
+                    unUseCount = (int) Math.floor((float)getNumberOfNamesUsed() * (getNumberOfButtons()-1) / getNumberOfButtons());
+
+                } else {
+                    unUseCount = (int) Math.floor((float)getNumberOfNamesUsed() / 2);
+                }
+
+                mDb.unUseLastNNamesByScore(unUseCount);
                 updateNumberOfNamesUsed();
                 updateNumberOfButtons();
                 updateNumberOfNamesForCountRound();
@@ -431,7 +445,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             if(votedInRound >= used){
                 totalVotes     += votedInRound;
                 votedInRound   -= used;
-                used            = (int) Math.floor(used/2f);    //TODO: en modo "fast" dividir entre el número de botones
+                used            = (int) Math.floor((float)used/(mFastMode ? buttons : 2));
                 buttons         = getOptimalNumberOfButtons(used);
             }
         }
