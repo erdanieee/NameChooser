@@ -56,7 +56,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private Integer             mNumberOfButtons            = null;             //USE getter and setter!
     private Integer             mNumberOfNamesForCountRound = null;             //USE getter and setter!
     private AlertDialog         mConfigDialog=null;
-    private float               mTotalVotacionesNecesarias;
+    private float               pref_totalVotacionesNecesarias;
     private TextView            mTextViewCountConfig;
     private ToggleButton        mToggleButtonConfig;
     private SeekBar             mSeekBarConfig;
@@ -140,7 +140,12 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         percentButton.setImageDrawable(new TextDrawable("0%"));
         getPreferences();
 
-        showConfigDialog();     //FIXME: comprobar si ya hay una ejecución en marcha y reiniciarla
+        if(mContinueSearch){
+            nextRound(null, true);
+
+        } else {
+            showConfigDialog();     //FIXME: comprobar si ya hay una ejecución en marcha y reiniciarla
+        }
     }
 
 
@@ -149,8 +154,9 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 
-        pref_totalVotacionesHechas  = sharedPref.getLong(getString(R.string.pref_totalVotesDone), 0);        //TODO: grabar antes de cerrar y cuando se reinicie
-        mContinueSearch             = sharedPref.getBoolean(getString(R.string.pref_continueSearch), false);
+        pref_totalVotacionesHechas      = sharedPref.getLong(getString(R.string.pref_totalVotesDone), 0);        //TODO: grabar antes de cerrar y cuando se reinicie
+        pref_totalVotacionesNecesarias  = sharedPref.getFloat(getString(R.string.pref_totalVotesNeeded), 0);      //Default=0 porque ya se calculará cuando se reinicien las estadísticas
+        mContinueSearch                 = sharedPref.getBoolean(getString(R.string.pref_continueSearch), false);
     }
 
 
@@ -159,7 +165,10 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
         editor.putLong(getString(R.string.pref_totalVotesDone), pref_totalVotacionesHechas);
         editor.putBoolean(getString(R.string.pref_continueSearch), mContinueSearch);
+        editor.putFloat(getString(R.string.pref_totalVotesNeeded), pref_totalVotacionesNecesarias);
         editor.apply();
+
+        mDb.close();
 
         super.onStop();
     }
@@ -213,14 +222,12 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                         @Override
                         public void onCancel(DialogInterface dialog) {
                             resetStatistics(getSexOptionDialog(), getPercentOptionDialog());
-                            mContinueSearch = true;
                         }
                     })
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             resetStatistics(getSexOptionDialog(), getPercentOptionDialog());
-                            mContinueSearch = true;
                         }
                     });
 
@@ -256,7 +263,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private void resetStatistics(DatabaseHelper.SEXO s, int percentSelected) {
         mDb.resetTable(s, percentSelected);
 
-        mTotalVotacionesNecesarias = calculateNumberOfVotesNeeded(getNumberOfNamesUsed());
+        pref_totalVotacionesNecesarias = calculateNumberOfVotesNeeded(getNumberOfNamesUsed());
         pref_totalVotacionesHechas = 0;
 
         percentButton.setImageDrawable(new TextDrawable("0%"));
@@ -321,9 +328,21 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
+    /**
+     * Muestra una nueva ronda de nombres
+     *  **/
     public void nextRound(){ nextRound(null);}
+    /**
+     * Muestra una nueva ronda de nombres
+     * @param v {@link View} que contiene en su <i>Tag</i> el {@link Nombre} que se ha elegido. Si es null, se asume que no se ha elegido ningún nombre en esa ronda porque se ha pulsado el botón skip
+     *  **/
     public void nextRound(View v){ nextRound(v, false);}
-    public void nextRound(View v, boolean first){
+    /**
+     * Muestra una nueva ronda de nombres
+     * @param v {@link View} que contiene en su <i>Tag</i> el {@link Nombre} que se ha elegido. Si es null, se asume que no se ha elegido ningún nombre en esa ronda porque se ha pulsado el botón skip
+     * @param first Si es <b>true</b> reinicia las variables y muestra una nueva ronda. Si es <b>false</b> graba resultados de la ronda anterior y muestra una nueva ronda de nombres
+     *  **/
+    public void nextRound(View v, boolean first){           //first=true -> primera ronda
         Nombre n;
         float maxScore;
 
@@ -331,12 +350,10 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             updateNumberOfNamesUsed();
             updateNumberOfButtons();
             updateNumberOfNamesForCountRound();
+            mContinueSearch = true;
 
         } else {
             pref_totalVotacionesHechas += getNumberOfButtons();
-            percentButton.setImageDrawable(new TextDrawable(String.valueOf(
-                    (int) Math.floor(100 * pref_totalVotacionesHechas / mTotalVotacionesNecesarias)
-            ) + "%"));
 
             mDb.raiseCount(mLayoutButtons);
 
@@ -369,6 +386,9 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             }
         }
 
+        percentButton.setImageDrawable(new TextDrawable(String.valueOf(
+                (int) Math.floor(100 * pref_totalVotacionesHechas / pref_totalVotacionesNecesarias)
+        ) + "%"));
         setNames();
     }
 
