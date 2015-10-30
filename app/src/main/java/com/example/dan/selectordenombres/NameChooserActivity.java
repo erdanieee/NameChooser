@@ -31,8 +31,6 @@ import database.Nombre;
 
 
 //TODO: Compartir en facebook los resultados cuando se encuentre un nombre común entre la pareja.
-//TODO: añadir opción para borrar estadísticas (borrar solo hombres, mujeres o ambos)
-//TODO: página inicial de configuración
 
 //TODO: quantiles:  0%      10%     20%     30%     40%     50%     60%     70%     80%     90%     100%
 //TODO:             0.0040  0.0050  0.0060  0.0080  0.0110  0.0160  0.0260  0.0480  0.1018  0.3398  29.2160
@@ -270,9 +268,11 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private void resetStatistics(DatabaseHelper.SEXO s, int percentSelected, boolean fastMode) {
         mDb.resetTable(s, percentSelected);
 
-        mFastMode                       = fastMode;
-        pref_totalVotacionesHechas      = 0;
-        pref_totalVotacionesNecesarias  = calculateNumberOfVotesNeeded(getNumberOfNamesUsed());
+        mFastMode                  = fastMode;
+        pref_totalVotacionesHechas = 0;
+
+        updateNumberOfNamesUsed();
+        pref_totalVotacionesNecesarias = calculateNumberOfVotesNeeded(getNumberOfNamesUsed());
 
         nextRound(null, true);
     }
@@ -352,14 +352,67 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         Nombre n;
         float maxScore;
 
-        if (first){
+        //comprueba si se ha terminado
+        if (getNumberOfNamesUsed() <= DEFAULT_REMAINING_NAMES_TO_END) {
+            percentButton.setImageDrawable(new TextDrawable("100%"));
+            showEndDialog(mDb.getHighestScoreName().nombre);
+
+        } else {
+            if(first) {
+                mContinueSearch = true;
+                updateNumberOfNamesUsed();
+                updateNumberOfButtons();
+                updateNumberOfNamesForCountRound();
+
+            } else {
+                pref_totalVotacionesHechas += getNumberOfButtons();
+
+                mDb.raiseCount(mLayoutButtons);
+
+                maxScore = 0;
+                for (int i = 0; i < mLayoutButtons.getChildCount(); i++) {
+                    n = (Nombre) mLayoutButtons.getChildAt(i).getTag();
+
+                    if (n.score > maxScore) {
+                        maxScore = n.score;
+                    }
+                }
+                if (v != null) {
+                    mDb.updateScore((Nombre) v.getTag(), maxScore + (1 / (float) getNumberOfButtons()));
+                }
+
+                setNumberOfNamesForCountRound(getNumberOfNamesForCountRound() - getNumberOfButtons());
+                if (getNumberOfNamesForCountRound() <= 0) {
+                    mDb.unUseLastNNamesByScore((int) Math.floor(getNumberOfNamesUsed() - (float) getNumberOfNamesUsed() / (mFastMode ? getNumberOfButtons() : 2)));
+                    updateNumberOfNamesUsed();
+                    updateNumberOfButtons();
+                    updateNumberOfNamesForCountRound();
+                }
+            }
+
+            percentButton.setImageDrawable(new TextDrawable(String.valueOf(
+                    (int) Math.floor(100 * pref_totalVotacionesHechas / pref_totalVotacionesNecesarias)
+            ) + "%"));
+
+            setNames();
+        }
+
+
+
+/*        if (first){
             updateNumberOfNamesUsed();
             updateNumberOfButtons();
             updateNumberOfNamesForCountRound();
             mContinueSearch = true;
+            percentButton.setImageDrawable(new TextDrawable(String.valueOf(
+                    (int) Math.floor(100 * pref_totalVotacionesHechas / pref_totalVotacionesNecesarias)
+            ) + "%"));
 
         } else {
             pref_totalVotacionesHechas += getNumberOfButtons();
+            percentButton.setImageDrawable(new TextDrawable(String.valueOf(
+                    (int) Math.floor(100 * pref_totalVotacionesHechas / pref_totalVotacionesNecesarias)
+            ) + "%"));
 
             mDb.raiseCount(mLayoutButtons);
 
@@ -385,25 +438,14 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
                 //check round
             } else if (getNumberOfNamesForCountRound() <= 0) {
-                int unUseCount=0;
-                if (mFastMode){
-                    unUseCount = (int) Math.floor((float)getNumberOfNamesUsed() * (getNumberOfButtons()-1) / getNumberOfButtons());
-
-                } else {
-                    unUseCount = (int) Math.floor((float)getNumberOfNamesUsed() / 2);
-                }
-
-                mDb.unUseLastNNamesByScore(unUseCount);
+                mDb.unUseLastNNamesByScore((int) Math.floor( getNumberOfNamesUsed() - (float) getNumberOfNamesUsed() / (mFastMode ? getNumberOfButtons() : 2)) );
                 updateNumberOfNamesUsed();
                 updateNumberOfButtons();
                 updateNumberOfNamesForCountRound();
             }
         }
 
-        percentButton.setImageDrawable(new TextDrawable(String.valueOf(
-                (int) Math.floor(100 * pref_totalVotacionesHechas / pref_totalVotacionesNecesarias)
-        ) + "%"));
-        setNames();
+        setNames();*/
     }
 
 
@@ -438,20 +480,20 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         totalVotes      = 0;
         votedInRound    = 0;
         buttons         = getOptimalNumberOfButtons(used);
-        while (used >= DEFAULT_REMAINING_NAMES_TO_END){
+        while (used > DEFAULT_REMAINING_NAMES_TO_END){
             votedInRound += buttons;
             totalClicks++;
 
-            if(votedInRound >= used){
+            if(votedInRound > used){
                 totalVotes     += votedInRound;
                 votedInRound   -= used;
-                used            = (int) Math.floor((float)used/(mFastMode ? buttons : 2));
+                used            = (int) Math.ceil((float)used/(mFastMode ? buttons : 2));
                 buttons         = getOptimalNumberOfButtons(used);
             }
         }
 
         ret = clicks ? totalClicks : totalVotes;
 
-        return ret+1;
+        return ret;
     }
 }

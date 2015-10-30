@@ -61,7 +61,7 @@
     <Switch
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Modo ultrarápido"
+        android:text="Modo rápido"
         android:id="@+id/switch1"
         android:layout_below="@+id/textViewCount"
         android:layout_alignParentLeft="true"
