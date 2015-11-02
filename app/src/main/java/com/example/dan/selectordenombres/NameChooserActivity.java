@@ -450,9 +450,9 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         // setup a dialog window
         builder
-                .setTitle("¡Terminado!")
+                .setTitle("¡Terminaste!")
                 .setMessage("El nombre más votado es " + winnerName + ". Pulsa " + getString(android.R.string.ok) + " para volver a empezar")
-                .setIcon(android.R.drawable.picture_frame)  //FIXME: cambiar icono por uno en condiciones
+                //.setIcon(android.R.drawable.picture_frame)  //FIXME: cambiar icono por uno en condiciones
                 .setCancelable(false)
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
