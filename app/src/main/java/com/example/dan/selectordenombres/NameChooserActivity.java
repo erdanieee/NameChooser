@@ -2,9 +2,11 @@ package com.example.dan.selectordenombres;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.LightingColorFilter;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
@@ -17,6 +19,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.Switch;
@@ -34,6 +37,9 @@ import database.Nombre;
 
 
 public class NameChooserActivity extends AppCompatActivity implements View.OnClickListener{
+    private static final String ID_PAYPAL = "3KHX7F9GQL6G8";
+    private static final String ID_MARKET = "";
+
     private static final int    DEFAULT_NUMBER_CLICK_ROUND      = 30;       //TODO: obtener esto como una preferencia al inicio
     private static final int    DEFAULT_MIN_NUMBER_OF_BUTTONS   = 2;
     private static final int    DEFAULT_MAX_NUMBER_OF_BUTTONS   = 8;
@@ -451,10 +457,61 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         // setup a dialog window
         builder
                 .setTitle("¡Terminaste!")
-                .setMessage("El nombre más votado es " + winnerName + ". Pulsa " + getString(android.R.string.ok) + " para volver a empezar")
+                .setMessage("El nombre con mayor puntuación es " + winnerName + ". Pulsa " + getString(android.R.string.ok) + " para volver a empezar")
                 //.setIcon(android.R.drawable.picture_frame)  //FIXME: cambiar icono por uno en condiciones
                 .setCancelable(false)
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //showConfigDialog();
+                        showDonateDialog();
+                    }
+                });
+
+        builder.create().show();
+    }
+
+
+    protected void showDonateDialog() {
+        LayoutInflater layoutInflater;
+        AlertDialog.Builder builder;
+        View promptView;
+        ImageButton ibDonate, ibRate;
+
+
+        layoutInflater  = LayoutInflater.from(this);
+        promptView      = layoutInflater.inflate(R.layout.donate_vote_dialog, null, false);
+        builder         = new AlertDialog.Builder(this);
+        ibDonate        = (ImageButton) promptView.findViewById(R.id.imageButtonDonate);
+        ibRate          = (ImageButton) promptView.findViewById(R.id.imageButtonRate);
+
+        ibDonate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final Intent intent = new Intent(Intent.ACTION_VIEW).setData(Uri.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=" + ID_PAYPAL));
+                startActivity(intent);
+            }
+        });
+
+        ibRate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final Intent intent = new Intent(Intent.ACTION_VIEW).setData(Uri.parse("market://details?id=" + ID_MARKET));
+                startActivity(intent);
+            }
+        });
+
+        builder.setView(promptView);
+        builder
+                .setTitle("Gracias por utilizar la aplicación")
+                .setIcon(android.R.drawable.ic_dialog_info)
+                .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        showConfigDialog();
+                    }
+                })
+                .setPositiveButton("No, gracias", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         showConfigDialog();
