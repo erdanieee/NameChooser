@@ -476,7 +476,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         builder
                 .setTitle("¡Terminaste!")
                 .setMessage("El nombre con mayor puntuación es " + winnerName + ". Pulsa " + getString(android.R.string.ok) + " para volver a empezar")
-                //.setIcon(android.R.drawable.picture_frame)  //FIXME: cambiar icono por uno en condiciones
+                .setIcon(android.R.drawable.ic_dialog_info)
                 .setCancelable(false)
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
@@ -496,6 +496,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         // setup a dialog window
         builder
                 .setTitle("Gracias por instalar la aplicación")
+                .setIcon(android.R.drawable.ic_dialog_info)
                 .setMessage("Esta aplicación es totalmente gratuíta: no incluye publicidad, no vende tus datos personales a terceros y no necesita permisos especiales. Si te gusta y crees que es útil, colabora dejando una valoración positiva en el Market")
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
@@ -538,7 +539,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         builder.setView(promptView);
         builder
                 .setTitle("Gracias por utilizar la aplicación")
-                .setIcon(android.R.drawable.ic_dialog_info)
+                .setIcon(android.R.drawable.ic_dialog_alert)
                 .setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialog) {
