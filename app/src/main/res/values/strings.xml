@@ -19,4 +19,6 @@
     <string name="text_select_name">Selecciona de los siguientes nombres el que más te gusta:</string>
     <string name="pref_continueSearch">pref_continueSearch</string>
     <string name="pref_fastMode">pref_ultraFastMode</string>
+    <string name="Donate_string">Donar</string>
+    <string name="Votar">Votar</string>
 </resources>

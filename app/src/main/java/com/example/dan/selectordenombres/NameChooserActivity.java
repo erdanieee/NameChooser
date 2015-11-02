@@ -63,6 +63,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private boolean             mContinueSearch;
     private boolean             mFastMode;
     private Switch              mFastModeSwitch;
+    private boolean             mFirstRun;
 
 
 
@@ -147,6 +148,14 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         } else {
             showConfigDialog();
+            if (mFirstRun){
+                showWellcomeDialog();
+
+                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
+                editor.putBoolean(getString(R.string.pref_firstStart), false);
+                editor.apply();
+                mFirstRun=false;
+            }
         }
     }
 
@@ -160,6 +169,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         pref_totalVotacionesNecesarias  = sharedPref.getFloat(getString(R.string.pref_totalVotesNeeded), 0);      //Default=0 porque ya se calculará cuando se reinicien las estadísticas
         mContinueSearch                 = sharedPref.getBoolean(getString(R.string.pref_continueSearch), false);
         mFastMode                       = sharedPref.getBoolean(getString(R.string.pref_fastMode), false);
+        mFirstRun                       = sharedPref.getBoolean(getString(R.string.pref_firstStart), true);
     }
 
 
@@ -320,6 +330,14 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         if (id == R.id.action_settings) {
             showConfigDialog();
             return true;
+
+        } else if (id == R.id.action_donate){
+            donatePayPal();
+            return true;
+
+        } else if (id == R.id.action_vote){
+            voteMarket();
+            return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -451,7 +469,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
 
 
-    protected void showEndDialog(String winnerName) {                   //TODO: mostrar botón de donar
+    protected void showEndDialog(String winnerName) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         // setup a dialog window
@@ -465,6 +483,24 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                     public void onClick(DialogInterface dialog, int which) {
                         //showConfigDialog();
                         showDonateDialog();
+                    }
+                });
+
+        builder.create().show();
+    }
+
+
+    protected void showWellcomeDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        // setup a dialog window
+        builder
+                .setTitle("Gracias por instalar la aplicación")
+                .setMessage("Esta aplicación es totalmente gratuíta: no incluye publicidad, no vende tus datos personales a terceros y no necesita permisos especiales. Si te gusta y crees que es útil, colabora dejando una valoración positiva en el Market")
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
                     }
                 });
 
@@ -488,16 +524,14 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         ibDonate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final Intent intent = new Intent(Intent.ACTION_VIEW).setData(Uri.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=" + ID_PAYPAL));
-                startActivity(intent);
+                donatePayPal();
             }
         });
 
         ibRate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final Intent intent = new Intent(Intent.ACTION_VIEW).setData(Uri.parse("market://details?id=" + ID_MARKET));
-                startActivity(intent);
+                voteMarket();
             }
         });
 
@@ -519,6 +553,16 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                 });
 
         builder.create().show();
+    }
+
+    private void donatePayPal(){
+        final Intent intent = new Intent(Intent.ACTION_VIEW).setData(Uri.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=" + ID_PAYPAL));
+        startActivity(intent);
+    }
+
+    private void voteMarket(){
+        final Intent intent = new Intent(Intent.ACTION_VIEW).setData(Uri.parse("market://details?id=" + ID_MARKET));
+        startActivity(intent);
     }
 
 
