@@ -32,4 +32,8 @@
     <string name="option_dialog_chooseSex">¿Niño o niña?</string>
     <string name="option_dialog_chooseListSize">Utiliza la barra deslizante inferior para elegir el tamaño de la base de datos</string>
     <string name="option_dialog_choseMode">Modo rápido</string>
+    <string name="donate_dialog_donate">Si te ha gustado y te ha parecido útil, puedes utilizar el botón inferior para invitarme a un café y ayudar al desarrollando de otras aplicaciones gratuítas y sin publicidad como esta :)</string>
+    <string name="donate_dialog_vote">También puedes colaborar haciendo una valoración positiva en Google Play:</string>
+    <string name="content_description_donate_paypal">Donar con Paypal</string>
+    <string name="donate_dialog_vote_market">Votar en Market</string>
 </resources>

@@ -15,43 +15,55 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />-->
-
-    <TextView
+    <ScrollView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="Si te ha gustado y te ha parecido útil, puedes utilizar el botón inferior para invitarme a un café y ayudar al desarrollando de otras aplicaciones gratuítas y sin publicidad como esta :)"
-        android:id="@+id/textView5"
-        android:layout_marginTop="15dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"/>
+        android:id="@+id/scrollView2" >
 
-    <ImageButton
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/imageButtonDonate"
-        android:layout_below="@+id/textView5"
-        android:src="@drawable/donate"
-        android:layout_centerHorizontal="true" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="También puedes colaborar haciendo una valoración positiva en Google Play:"
-        android:id="@+id/textView8"
-        android:layout_below="@+id/imageButtonDonate"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="15dp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:text="@string/donate_dialog_donate"
+                android:id="@+id/textView5"
+                android:layout_marginTop="15dp"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"/>
 
-    <ImageButton
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/imageButtonRate"
-        android:layout_below="@+id/textView8"
-        android:src="@drawable/rate"
-        android:layout_centerHorizontal="true" />
+            <ImageButton
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageButtonDonate"
+                android:layout_below="@+id/textView5"
+                android:src="@drawable/donate"
+                android:contentDescription="@string/content_description_donate_paypal"
+                android:layout_centerHorizontal="true" />
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:text="@string/donate_dialog_vote"
+                android:id="@+id/textView8"
+                android:layout_below="@+id/imageButtonDonate"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_marginTop="15dp" />
+
+            <ImageButton
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageButtonRate"
+                android:layout_below="@+id/textView8"
+                android:contentDescription="@string/donate_dialog_vote_market"
+                android:src="@drawable/rate"
+                android:layout_centerHorizontal="true" />
+
+        </RelativeLayout>
+    </ScrollView>
 </RelativeLayout>
