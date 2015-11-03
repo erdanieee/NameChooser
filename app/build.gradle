@@ -7,8 +7,8 @@ android {
         applicationId 'com.dan.android.selectordenombres'
         minSdkVersion 14
         targetSdkVersion 23
-        versionCode 273
-        versionName "2.7.3"
+        versionCode 275
+        versionName "2.7.5"
     }
     buildTypes {
         release {

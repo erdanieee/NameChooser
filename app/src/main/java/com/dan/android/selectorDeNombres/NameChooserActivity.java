@@ -475,7 +475,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         // setup a dialog window
         builder
                 .setTitle(getResources().getString(R.string.end_dialog_title))
-                .setMessage(getResources().getString(R.string.end_dialog_winnerName) + winnerName + getResources().getString(R.string.end_dialog_startAgain))
+                .setMessage(getResources().getString(R.string.end_dialog_winnerName) + " " + winnerName + getResources().getString(R.string.end_dialog_startAgain))
                         .setIcon(android.R.drawable.ic_dialog_info)
                         .setCancelable(false)
                         .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
