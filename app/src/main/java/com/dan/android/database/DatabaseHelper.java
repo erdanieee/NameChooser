@@ -1,4 +1,4 @@
-package database;
+package com.dan.android.database;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -7,7 +7,6 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
-import android.widget.Button;
 import android.widget.LinearLayout;
 
 import java.io.BufferedReader;
@@ -15,9 +14,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
-/**
- * Created by dan on 25/08/13.
- */
+
+
 public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String DATABASE_NAME       = "names.db";
     //private static final String DATABASE_FILE   = "test.txt";
@@ -27,7 +25,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION  = 5;
     private Context mContext;
 
-    public enum SEXO { MALE, FEMALE};
+    public enum SEXO { MALE, FEMALE}
 
 
     public DatabaseHelper(Context contexto){
@@ -115,7 +113,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         selection       = TablaNombres.COL_USED + "=?";
         selectionArgs   = new String[]{"1"};
         order           = TablaNombres.COL_COUNT + " ASC, RANDOM()";
-        aux             = new ArrayList<Nombre>(limit);
+        aux             = new ArrayList<>(limit);
 
         c = getReadableDatabase().query(TablaNombres.TABLA, proyection, selection, selectionArgs, null, null, order, String.valueOf(limit));
 
@@ -151,13 +149,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         c = getReadableDatabase().query(TablaNombres.TABLA, proyection, selection, selectionArgs, null, null, order, limit);
 
-        while(c.moveToNext()){
+        if (c.moveToNext()){
             n = new Nombre( c.getInt(c.getColumnIndex(TablaNombres._ID)),
                     c.getString(c.getColumnIndex(TablaNombres.COL_NOMBRE)),
                     c.getFloat(c.getColumnIndex(TablaNombres.COL_SCORE)),
                     c.getInt(c.getColumnIndex(TablaNombres.COL_COUNT))
             );
-            break;
         }
         c.close();
 
@@ -186,9 +183,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         c = getReadableDatabase().query(TablaNombres.TABLA, proyection, selection, selectionArg, groupBy, null, order, limit);       //FIXME: si no funcionar usar rawQuery
 
-        while(c.moveToNext()){
+        if (c.moveToNext()){
             count = c.getInt(0);
-            break;
         }
         c.close();
 
@@ -206,7 +202,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         try {
             db.beginTransaction();
             for (int i = 0; i < layoutButtons.getChildCount(); i++) {
-                n = (Nombre) ((Button) layoutButtons.getChildAt(i)).getTag();
+                n = (Nombre) layoutButtons.getChildAt(i).getTag();
 
                 db.execSQL("UPDATE " + TablaNombres.TABLA +
                                 " SET " + TablaNombres.COL_COUNT + "=" + TablaNombres.COL_COUNT + "+1" +
@@ -338,13 +334,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         c = getReadableDatabase().query(TablaNombres.TABLA, proyection, selection, selectionArgs, null, null, null);
 
-        while(c.moveToNext()){
+        if (c.moveToNext()){
             n = new Nombre( c.getInt(c.getColumnIndex(TablaNombres._ID)),
                     c.getString(c.getColumnIndex(TablaNombres.COL_NOMBRE)),
                     c.getFloat(c.getColumnIndex(TablaNombres.COL_SCORE)),
                     c.getInt(c.getColumnIndex(TablaNombres.COL_COUNT))
             );
-            break;
         }
         c.close();
 

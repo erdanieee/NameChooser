@@ -1,4 +1,4 @@
-package com.example.dan.selectordenombres;
+package com.dan.android.selectorDeNombres;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -26,11 +26,11 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import com.dan.android.database.DatabaseHelper;
+import com.dan.android.database.Nombre;
+import com.dan.android.selectordenombres.R;
+
 import java.util.ArrayList;
-
-import database.DatabaseHelper;
-import database.Nombre;
-
 
 
 //TODO: Compartir en facebook los resultados cuando se encuentre un nombre común entre la pareja.
@@ -38,7 +38,7 @@ import database.Nombre;
 
 public class NameChooserActivity extends AppCompatActivity implements View.OnClickListener{
     private static final String ID_PAYPAL = "3KHX7F9GQL6G8";
-    private static final String ID_MARKET = "";
+    private static final String ID_MARKET = "com.dan.android.selectordenombres";
 
     private static final int    DEFAULT_NUMBER_CLICK_ROUND      = 30;       //TODO: obtener esto como una preferencia al inicio
     private static final int    DEFAULT_MIN_NUMBER_OF_BUTTONS   = 2;
@@ -230,7 +230,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
             builder.setView(promptView);
             builder
-                    .setTitle("Configuración")
+                    .setTitle(getResources().getString(R.string.configuration_title))
                     .setIcon(android.R.drawable.ic_dialog_info)
                     .setOnCancelListener(new DialogInterface.OnCancelListener() {
                         @Override
@@ -474,17 +474,17 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         // setup a dialog window
         builder
-                .setTitle("¡Terminaste!")
-                .setMessage("El nombre con mayor puntuación es " + winnerName + ". Pulsa " + getString(android.R.string.ok) + " para volver a empezar")
-                .setIcon(android.R.drawable.ic_dialog_info)
-                .setCancelable(false)
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        //showConfigDialog();
-                        showDonateDialog();
-                    }
-                });
+                .setTitle(getResources().getString(R.string.end_dialog_title))
+                .setMessage(getResources().getString(R.string.end_dialog_winnerName) + winnerName + getResources().getString(R.string.end_dialog_startAgain))
+                        .setIcon(android.R.drawable.ic_dialog_info)
+                        .setCancelable(false)
+                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                //showConfigDialog();
+                                showDonateDialog();
+                            }
+                        });
 
         builder.create().show();
     }
@@ -495,9 +495,9 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         // setup a dialog window
         builder
-                .setTitle("Gracias por instalar la aplicación")
+                .setTitle(getResources().getString(R.string.welcome_dialog_title))
                 .setIcon(android.R.drawable.ic_dialog_info)
-                .setMessage("Esta aplicación es totalmente gratuíta: no incluye publicidad, no vende tus datos personales a terceros y no necesita permisos especiales. Si te gusta y crees que es útil, colabora dejando una valoración positiva en el Market")
+                .setMessage(getResources().getString(R.string.welcome_dialog_msg))
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -538,7 +538,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         builder.setView(promptView);
         builder
-                .setTitle("Gracias por utilizar la aplicación")
+                .setTitle(getResources().getString(R.string.donate_dialog_title))
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
@@ -546,7 +546,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                         showConfigDialog();
                     }
                 })
-                .setPositiveButton("No, gracias", new DialogInterface.OnClickListener() {
+                .setPositiveButton(getResources().getString(R.string.noThanks), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         showConfigDialog();

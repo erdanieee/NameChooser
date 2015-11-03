@@ -1,4 +1,4 @@
-package database;
+package com.dan.android.database;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -10,9 +10,8 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 import android.util.Log;
 
-/**
- * Created by dlopez on 23/10/13.
- */
+
+
 public class NameChooserProvider extends ContentProvider {
     private static final String TAG             = "NameChooserProvider";
     private static final String PROVIDER_NAME   = "dan.android.nameChooser.provider";
@@ -117,7 +116,7 @@ public class NameChooserProvider extends ContentProvider {
         Uri contentUri  = null;
         Uri _uri        = null;
         long id         = -1;
-        String tabla=null;
+        String tabla    = null;
 
         switch (uriMatcher.match(uri)){
             case NOMBRES:

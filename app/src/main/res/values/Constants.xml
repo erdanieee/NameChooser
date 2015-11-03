@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <integer name="default_percent_selected">25</integer>
+    <integer name="default_percent_selected">40</integer>
 </resources>

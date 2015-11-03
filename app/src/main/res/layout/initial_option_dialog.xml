@@ -9,7 +9,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="¿Niño o niña?"
+        android:text="@string/option_dialog_chooseSex"
         android:id="@+id/textView6"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
@@ -30,7 +30,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Utiliza la barra deslizante inferior para buscar solo entre los nombres más comunes."
+        android:text="@string/option_dialog_chooseListSize"
         android:id="@+id/textView7"
         android:labelFor="@+id/seekBar"
         android:layout_below="@+id/toggleButton"
@@ -61,12 +61,13 @@
     <Switch
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Modo rápido"
+        android:text="@string/option_dialog_choseMode"
         android:id="@+id/switch1"
         android:checked="true"
         android:layout_below="@+id/textViewCount"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
+        android:enabled="false"
         android:layout_marginTop="@dimen/abc_dialog_padding_material" />
 
 </RelativeLayout>

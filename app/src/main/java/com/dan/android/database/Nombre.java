@@ -1,8 +1,6 @@
-package database;
+package com.dan.android.database;
 
-/**
- * Created by dlopez on 23/10/15.
- */
+
 public class Nombre {
     public int id, count;
     public float score;

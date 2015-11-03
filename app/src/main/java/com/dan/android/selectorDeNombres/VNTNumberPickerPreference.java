@@ -1,4 +1,4 @@
-package com.example.dan.selectordenombres;
+package com.dan.android.selectorDeNombres;
 
 /*
  * Copyright (C) 2014-2015 Vanniktech - Niklas Baudy <http://vanniktech.de/Imprint>
@@ -27,6 +27,8 @@ import android.view.Gravity;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.NumberPicker;
+
+import com.dan.android.selectordenombres.R;
 
 public class VNTNumberPickerPreference extends DialogPreference {
     private static final int     MIN_VALUE           = 0;

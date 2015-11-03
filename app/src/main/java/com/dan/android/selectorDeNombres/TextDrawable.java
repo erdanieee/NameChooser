@@ -1,4 +1,4 @@
-package com.example.dan.selectordenombres;
+package com.dan.android.selectorDeNombres;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -9,9 +9,8 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 
-/**
- * Created by dlopez on 26/10/15.
- */
+
+
 public class TextDrawable extends Drawable {
 
     private final String text;

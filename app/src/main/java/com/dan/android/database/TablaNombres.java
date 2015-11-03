@@ -1,10 +1,8 @@
-package database;
+package com.dan.android.database;
 
 import android.provider.BaseColumns;
 
-/**
- * Created by dlopez on 22/10/13.
- */
+
 public class TablaNombres implements BaseColumns{
     /** nombre de la tabla */
     public static final String TABLA = "nombres";

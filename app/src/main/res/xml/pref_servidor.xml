@@ -31,7 +31,7 @@
         android:title="Filtrar nombres por frecuencia"
         android:defaultValue="true" />
 
-    <com.example.dan.selectordenombres.VNTNumberPickerPreference
+    <com.dan.android.selectorDeNombres.VNTNumberPickerPreference
         xmlns:vntnumberpickerpreference="http://schemas.android.com/apk/res-auto"
         android:defaultValue="10"
         android:dependency="@string/pref_useFreq"
@@ -47,7 +47,7 @@
         android:title="Omitir nombres muy poco frecuentes"
         android:defaultValue="true" />-->
 
-    <com.example.dan.selectordenombres.VNTNumberPickerPreference
+    <com.dan.android.selectorDeNombres.VNTNumberPickerPreference
         xmlns:vntnumberpickerpreference="http://schemas.android.com/apk/res-auto"
         android:defaultValue="50"
         android:dependency="@string/pref_useFreq"
