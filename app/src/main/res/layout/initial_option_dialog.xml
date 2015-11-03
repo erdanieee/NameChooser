@@ -5,69 +5,80 @@
     style="@style/AlertDialog.AppCompat.Light"
     android:clickable="true">
 
-    <TextView
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="@string/option_dialog_chooseSex"
-        android:id="@+id/textView6"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:labelFor="@+id/spinner" />
-
-    <ToggleButton
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/toggleButton"
-        android:textOn="Niño"
-        android:textOff="Niña"
-        android:textStyle="italic"
-        android:layout_below="@+id/textView6"
-        android:background="@drawable/boton_sexo"
-        android:checked="true" />
-
-    <TextView
+    <ScrollView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="@string/option_dialog_chooseListSize"
-        android:id="@+id/textView7"
-        android:labelFor="@+id/seekBar"
-        android:layout_below="@+id/toggleButton"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="@dimen/abc_dialog_padding_material" />
+        android:id="@+id/scrollView2" >
 
-    <SeekBar
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/seekBar"
-        android:layout_below="@+id/textView7"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:progress="@integer/default_percent_selected"
-        android:max="99" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text=""
-        android:id="@+id/textViewCount"
-        android:layout_below="@+id/seekBar"
-        android:layout_alignRight="@+id/seekBar"
-        android:layout_alignEnd="@+id/seekBar" />
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="@string/option_dialog_chooseSex"
+                android:id="@+id/textView6"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:labelFor="@+id/spinner" />
 
-    <Switch
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/option_dialog_choseMode"
-        android:id="@+id/switch1"
-        android:checked="true"
-        android:layout_below="@+id/textViewCount"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:enabled="false"
-        android:layout_marginTop="@dimen/abc_dialog_padding_material" />
+            <ToggleButton
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/toggleButton"
+                android:textOn="Niño"
+                android:textOff="Niña"
+                android:textStyle="italic"
+                android:layout_below="@+id/textView6"
+                android:background="@drawable/boton_sexo"
+                android:checked="true" />
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="@string/option_dialog_chooseListSize"
+                android:id="@+id/textView7"
+                android:labelFor="@+id/seekBar"
+                android:layout_below="@+id/toggleButton"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_marginTop="@dimen/abc_dialog_padding_material" />
+
+            <SeekBar
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/seekBar"
+                android:layout_below="@+id/textView7"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:progress="@integer/default_percent_selected"
+                android:max="99" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:text=""
+                android:id="@+id/textViewCount"
+                android:layout_below="@+id/seekBar"
+                android:layout_alignRight="@+id/seekBar"
+                android:layout_alignEnd="@+id/seekBar" />
+
+            <Switch
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/option_dialog_choseMode"
+                android:id="@+id/switch1"
+                android:checked="true"
+                android:layout_below="@+id/textViewCount"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:enabled="false"
+                android:layout_marginTop="@dimen/abc_dialog_padding_material" />
+
+        </RelativeLayout>
+    </ScrollView>
 </RelativeLayout>

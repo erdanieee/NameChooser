@@ -24,8 +24,8 @@
     <string name="noThanks">No, gracias</string>
     <string name="configuration_title">Configuración</string>
     <string name="end_dialog_title">¡Terminaste!</string>
-    <string name="end_dialog_winnerName">El nombre con mayor puntuación es</string>
-    <string name="end_dialog_startAgain">. Pulsa el botón para volver a empezar</string>
+    <string name="end_dialog_winnerName">El nombre con mayor puntuación es </string>
+    <string name="end_dialog_startAgain">. Pulsa aceptar para volver a empezar</string>
     <string name="welcome_dialog_title">Gracias por instalar la aplicación</string>
     <string name="welcome_dialog_msg">Esta aplicación es totalmente gratuita: no existe versión PRO de pago, no incluye publicidad y no necesita permisos especiales. Si te gusta y crees que es útil, colabora dejando una valoración positiva en el Market</string>
     <string name="donate_dialog_title">Gracias por utilizar la aplicación</string>

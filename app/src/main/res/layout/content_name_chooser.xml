@@ -16,13 +16,10 @@
         android:layout_height="wrap_content"
         android:id="@+id/TextViewTitle"/>
 
-    <Space
-        android:layout_width="20dp"
-        android:layout_height="20dp" />
-
     <ScrollView
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
         android:id="@+id/scrollView" >
 
         <LinearLayout

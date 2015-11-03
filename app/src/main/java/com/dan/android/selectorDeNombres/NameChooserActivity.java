@@ -140,7 +140,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             }
         });
 
-        percentButton.setImageDrawable(new TextDrawable("0%"));
+        percentButton.setImageDrawable(new TextDrawable("0%", this));
         getPreferences();
 
         if(mContinueSearch){
@@ -373,7 +373,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         //comprueba si se ha terminado
         if (getNumberOfNamesUsed() <= DEFAULT_REMAINING_NAMES_TO_END) {
-            percentButton.setImageDrawable(new TextDrawable("100%"));
+            percentButton.setImageDrawable(new TextDrawable("100%", this));
             showEndDialog(mDb.getHighestScoreName().nombre);
 
         } else {
@@ -411,7 +411,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
             percentButton.setImageDrawable(new TextDrawable(String.valueOf(
                     (int) Math.floor(100 * pref_totalVotacionesHechas / pref_totalVotacionesNecesarias)
-            ) + "%"));
+            ) + "%", this));
 
             setNames();
         }
