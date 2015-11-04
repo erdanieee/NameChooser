@@ -66,6 +66,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private Switch              mExtendedModeSwitch;
     private boolean             mFirstRun;
     private Long                mTotalCount=null;
+    private ArrayList<Nombre>   mUndelete;
 
 
 
@@ -131,6 +132,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         mLayoutButtons  = (LinearLayout)findViewById(R.id.linearLayoutButtons);
         percentButton   = (FloatingActionButton)findViewById(R.id.porcentaje);
         mDb             = new DatabaseHelper(this);
+        mUndelete       = new ArrayList<>();
 
         /*Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);*/
@@ -299,13 +301,18 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
 
 
-
-    private void setNames(){
+    private void setNames(){ setNames(true);}
+    private void setNames(boolean fromDb){
         ArrayList<Nombre> nombres;
         int i;
         Button b;
 
-        nombres = mDb.getUsedNamesByRandomAndCount(getNumberOfButtons());
+        if(fromDb) {
+            nombres = mDb.getUsedNamesByRandomAndCount(getNumberOfButtons());
+
+        } else {
+            nombres = mUndelete;
+        }
 
         i = 0;
         for (Nombre n : nombres){
@@ -421,60 +428,34 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                     (int) Math.floor(100 * pref_totalVotacionesHechas / pref_totalVotacionesNecesarias)
             ) + "%", this));
 
+            //save buttons for undelete
+            mUndelete.clear();
+            for (int i = 0; i < mLayoutButtons.getChildCount(); i++) {
+                mUndelete.add((Nombre) mLayoutButtons.getChildAt(i).getTag());
+            }
+
             setNames();
         }
+    }
 
 
+    public void undelete(View v){
+        if (!mUndelete.isEmpty()){
+            pref_totalVotacionesHechas -= getNumberOfButtons();
 
-/*        if (first){
+            mDb.undo(mUndelete);
+
             updateNumberOfNamesUsed();
             updateNumberOfButtons();
             updateNumberOfNamesForCountRound();
-            mContinueSearch = true;
+
             percentButton.setImageDrawable(new TextDrawable(String.valueOf(
                     (int) Math.floor(100 * pref_totalVotacionesHechas / pref_totalVotacionesNecesarias)
-            ) + "%"));
+            ) + "%", this));
 
-        } else {
-            pref_totalVotacionesHechas += getNumberOfButtons();
-            percentButton.setImageDrawable(new TextDrawable(String.valueOf(
-                    (int) Math.floor(100 * pref_totalVotacionesHechas / pref_totalVotacionesNecesarias)
-            ) + "%"));
-
-            mDb.raiseCount(mLayoutButtons);
-
-            maxScore = 0;
-            for (int i = 0; i < mLayoutButtons.getChildCount(); i++) {
-                n = (Nombre) mLayoutButtons.getChildAt(i).getTag();
-
-                if (n.score > maxScore) {
-                    maxScore = n.score;
-                }
-            }
-
-            if (v != null) {
-                mDb.updateScore((Nombre) v.getTag(), maxScore + (1 / (float) getNumberOfButtons()));
-            }
-
-            setNumberOfNamesForCountRound(getNumberOfNamesForCountRound() - getNumberOfButtons());
-
-            //check end
-            if (getNumberOfNamesUsed() <= DEFAULT_REMAINING_NAMES_TO_END) {
-                percentButton.setImageDrawable(new TextDrawable("100%"));
-                showEndDialog(mDb.getHighestScoreName().nombre);
-
-                //check round
-            } else if (getNumberOfNamesForCountRound() <= 0) {
-                mDb.unUseLastNNamesByScore((int) Math.floor( getNumberOfNamesUsed() - (float) getNumberOfNamesUsed() / (mFastMode ? getNumberOfButtons() : 2)) );
-                updateNumberOfNamesUsed();
-                updateNumberOfButtons();
-                updateNumberOfNamesForCountRound();
-            }
+            setNames(false);
         }
-
-        setNames();*/
     }
-
 
 
     protected void showEndDialog(String winnerName) {

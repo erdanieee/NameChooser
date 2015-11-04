@@ -25,6 +25,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION  = 5;
     private Context mContext;
 
+
+
     public enum SEXO { MALE, FEMALE}
 
 
@@ -344,5 +346,34 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         c.close();
 
         return n;
+    }
+
+    public void undo(ArrayList<Nombre> mUndelete) {
+        SQLiteDatabase db;
+        ContentValues values;
+        String selection;
+        String[] selectionArgs;
+
+        values = new ContentValues();
+        selection = TablaNombres._ID + "=?" ;
+        db = getWritableDatabase();
+
+        try {
+            db.beginTransaction();
+
+            for (Nombre n : mUndelete) {
+                values.clear();
+                values.put(TablaNombres.COL_COUNT, n.count);
+                values.put(TablaNombres.COL_SCORE, n.score);
+                values.put(TablaNombres.COL_USED, 1);
+                selectionArgs = new String[] {String.valueOf(n.id)};
+                db.update(TablaNombres.TABLA, values, selection, selectionArgs);
+            }
+
+            db.setTransactionSuccessful();
+
+        } finally {
+            db.endTransaction();
+        }
     }
 }
