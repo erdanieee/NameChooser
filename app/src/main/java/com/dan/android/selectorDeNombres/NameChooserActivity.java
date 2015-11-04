@@ -422,17 +422,17 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                     updateNumberOfButtons();
                     updateNumberOfNamesForCountRound();
                 }
+
+                //save buttons for undelete
+                mUndelete.clear();
+                for (int i = 0; i < mLayoutButtons.getChildCount(); i++) {
+                    mUndelete.add((Nombre) mLayoutButtons.getChildAt(i).getTag());
+                }
             }
 
             percentButton.setImageDrawable(new TextDrawable(String.valueOf(
                     (int) Math.floor(100 * pref_totalVotacionesHechas / pref_totalVotacionesNecesarias)
             ) + "%", this));
-
-            //save buttons for undelete
-            mUndelete.clear();
-            for (int i = 0; i < mLayoutButtons.getChildCount(); i++) {
-                mUndelete.add((Nombre) mLayoutButtons.getChildAt(i).getTag());
-            }
 
             setNames();
         }
@@ -454,6 +454,8 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             ) + "%", this));
 
             setNames(false);
+
+            mUndelete.clear();
         }
     }
 
