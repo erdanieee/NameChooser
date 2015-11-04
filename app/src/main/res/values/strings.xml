@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">NameFinder</string>
+    <string name="app_name">Name Finder</string>
     <string name="action_restart">Reiniciar</string>
     <string name="pref_userName">sp_userName</string>
     <string name="pref_numberOfButtons">sp_numberOfButtons</string>

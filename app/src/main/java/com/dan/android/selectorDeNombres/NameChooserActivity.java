@@ -31,6 +31,7 @@ import com.dan.android.database.Nombre;
 import com.dan.android.selectordenombres.R;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 
 //TODO: Compartir en facebook los resultados cuando se encuentre un nombre común entre la pareja.
@@ -62,8 +63,9 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private SeekBar             mSeekBarConfig;
     private boolean             mContinueSearch;
     private boolean             mFastMode;
-    private Switch              mFastModeSwitch;
+    private Switch              mExtendedModeSwitch;
     private boolean             mFirstRun;
+    private Long                mTotalCount=null;
 
 
 
@@ -190,22 +192,24 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         LayoutInflater layoutInflater;
         AlertDialog.Builder builder;
         View promptView;
-
+        Random r;
 
         if(mConfigDialog==null) {
             layoutInflater  = LayoutInflater.from(this);
             promptView      = layoutInflater.inflate(R.layout.initial_option_dialog, null, false);
             builder         = new AlertDialog.Builder(this);
+            r               = new Random();
 
             mTextViewCountConfig    = (TextView) promptView.findViewById(R.id.textViewCount);
             mSeekBarConfig          = (SeekBar) promptView.findViewById(R.id.seekBar);
             mToggleButtonConfig     = (ToggleButton) promptView.findViewById(R.id.toggleButton);
-            mFastModeSwitch         = (Switch) promptView.findViewById(R.id.switch1);
+            mExtendedModeSwitch     = (Switch) promptView.findViewById(R.id.switch1);
 
+            mToggleButtonConfig.setChecked(r.nextBoolean());
             mToggleButtonConfig.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    updateTextViewNumberOfNames();
+                    updateTextViewNumberOfNames(true);
                 }
             });
 
@@ -213,6 +217,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                     updateSeekBarConfigColor();
+                    updateTextViewNumberOfNames(false);
                 }
 
                 @Override
@@ -221,11 +226,11 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
                 @Override
                 public void onStopTrackingTouch(SeekBar seekBar) {
-                    updateTextViewNumberOfNames();
+                    updateTextViewNumberOfNames(true);
                 }
             });
 
-            updateTextViewNumberOfNames();
+            updateTextViewNumberOfNames(true);
             updateSeekBarConfigColor();
 
             builder.setView(promptView);
@@ -235,13 +240,13 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                     .setOnCancelListener(new DialogInterface.OnCancelListener() {
                         @Override
                         public void onCancel(DialogInterface dialog) {
-                            resetStatistics(getSexOptionDialog(), getPercentOptionDialog(), mFastModeSwitch.isChecked());
+                            resetStatistics(getSexOptionDialog(), getPercentOptionDialog(), ! mExtendedModeSwitch.isChecked());
                         }
                     })
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            resetStatistics(getSexOptionDialog(), getPercentOptionDialog(), mFastModeSwitch.isChecked());
+                            resetStatistics(getSexOptionDialog(), getPercentOptionDialog(), ! mExtendedModeSwitch.isChecked());
                         }
                     });
 
@@ -261,8 +266,11 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     }
 
 
-    private void updateTextViewNumberOfNames() {
-        mTextViewCountConfig.setText(String.valueOf(mDb.getCountSexo(getSexOptionDialog()) * getPercentOptionDialog() / 100));
+    private void updateTextViewNumberOfNames(boolean getFromDb) {
+        if(getFromDb || mTotalCount==null){
+            mTotalCount = mDb.getCountSexo(getSexOptionDialog());
+        }
+        mTextViewCountConfig.setText(String.valueOf(mTotalCount * getPercentOptionDialog() / 100));
     }
 
 
