@@ -390,6 +390,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         if (getNumberOfNamesUsed() <= DEFAULT_REMAINING_NAMES_TO_END) {
             percentButton.setImageDrawable(new TextDrawable("100%", this));
             showEndDialog(mDb.getHighestScoreName().nombre);
+            mUndelete.clear();
 
         } else {
             if(first) {
@@ -397,6 +398,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                 updateNumberOfNamesUsed();
                 updateNumberOfButtons();
                 updateNumberOfNamesForCountRound();
+                mUndelete.clear();
 
             } else {
                 pref_totalVotacionesHechas += getNumberOfButtons();
