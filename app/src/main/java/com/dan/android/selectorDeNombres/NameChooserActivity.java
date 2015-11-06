@@ -67,6 +67,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private boolean             mFastMode;
     private Switch              mFastModeSwitch;
     private boolean             mFirstRun;
+    private ImageButton         mRegionButton;
 
 
 
@@ -204,6 +205,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             mSeekBarConfig          = (SeekBar) promptView.findViewById(R.id.seekBar);
             mToggleButtonConfig     = (ToggleButton) promptView.findViewById(R.id.toggleButton);
             mFastModeSwitch         = (Switch) promptView.findViewById(R.id.switch1);
+            mRegionButton           = (ImageButton) promptView.findViewById(R.id.imageButtonFlag);
 
             mToggleButtonConfig.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
@@ -630,7 +632,8 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                 //.setTitle("Share Appliction")
                 .setAdapter(adapter, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int item) {
-                        //...
+                        mRegionButton.setBackgroundResource(items[item].icon);
+                        mDb.loadDatabase(items[item].icon);
                     }
                 }).show();
 
