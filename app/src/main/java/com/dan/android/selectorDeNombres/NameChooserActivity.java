@@ -17,10 +17,13 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -592,5 +595,58 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         ret = clicks ? totalClicks : totalVotes;
 
         return ret;
+    }
+
+    public void changeRegion(View view) {
+        final Item[] items = {
+                new Item("España", R.mipmap.flag_spain),
+                new Item("U.S.", R.mipmap.flag_us),
+                //new Item("...", 0),//no icon for this one
+        };
+
+        ListAdapter adapter = new ArrayAdapter<Item>(
+                this,
+                android.R.layout.select_dialog_item,
+                android.R.id.text1,
+                items){
+            public View getView(int position, View convertView, ViewGroup parent) {
+                //Use super class to create the View
+                View v = super.getView(position, convertView, parent);
+                TextView tv = (TextView)v.findViewById(android.R.id.text1);
+
+                //Put the image on the TextView
+                tv.setCompoundDrawablesWithIntrinsicBounds(items[position].icon, 0, 0, 0);
+
+                //Add margin between image and text (support various screen densities)
+                int dp5 = (int) (5 * getResources().getDisplayMetrics().density + 0.5f);
+                tv.setCompoundDrawablePadding(dp5);
+
+                return v;
+            }
+        };
+
+
+        new AlertDialog.Builder(this)
+                //.setTitle("Share Appliction")
+                .setAdapter(adapter, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int item) {
+                        //...
+                    }
+                }).show();
+
+
+    }
+
+    private static class Item{
+        public final String text;
+        public final int icon;
+        public Item(String text, Integer icon) {
+            this.text = text;
+            this.icon = icon;
+        }
+        @Override
+        public String toString() {
+            return text;
+        }
     }
 }

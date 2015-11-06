@@ -13,13 +13,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-
+import java.util.Locale;
 
 
 public class DatabaseHelper extends SQLiteOpenHelper {
-    public static final String DATABASE_NAME       = "names.db";
-    //private static final String DATABASE_FILE   = "test.txt";
-    private static final String DATABASE_FILE   = "spanish.txt";
+    public static final String DATABASE_NAME        = "names.db";
+    //private static final String DATABASE_FILE     = "test.txt";
+    private static final String DATABASE_FILE_ES_ES = "spanish.txt";
+    private static final String DATABASE_FILE_EN_US = "en_US.txt";
     private String FEMALE_SYMBOL = "M";
     private String MALE_SYMBOL = "H";
     private static final int DATABASE_VERSION  = 5;
@@ -35,15 +36,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    @Override
-    public void onCreate(SQLiteDatabase sqLiteDatabase) {
+    private String getDatabaseFileName(){
+        String l;
+        String file;
+
+        l = Locale.getDefault().toString();
+
+        file = DATABASE_FILE_ES_ES;
+        if (l.equals(Locale.US.toString())){
+            file = DATABASE_FILE_EN_US;
+        }
+
+        return file;
+    }
+
+
+    public  void loadDatabase(String fileName){ loadDatabase(getWritableDatabase(), fileName);}
+    private void loadDatabase(SQLiteDatabase sqLiteDatabase, String fileName){
         BufferedReader br;
         String line=null;
         String[] tokens;
+
         ContentValues values = new ContentValues();
 
         try{
-            br = new BufferedReader(new InputStreamReader(mContext.getAssets().open(DATABASE_FILE)));
+            br = new BufferedReader(new InputStreamReader(mContext.getAssets().open(fileName)));
             sqLiteDatabase.beginTransaction();
 
             sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TablaNombres.TABLA);
@@ -69,6 +86,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         } finally {
             sqLiteDatabase.endTransaction();
         }
+    }
+
+
+    @Override
+    public void onCreate(SQLiteDatabase sqLiteDatabase) {
+        loadDatabase(sqLiteDatabase, getDatabaseFileName());
     }
 
 

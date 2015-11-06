@@ -14,26 +14,66 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <TextView
+            <LinearLayout
+                android:orientation="horizontal"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="@string/option_dialog_chooseSex"
-                android:id="@+id/textView6"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
-                android:labelFor="@+id/spinner" />
+                android:id="@+id/layoutRegion"
+                android:layout_height="@dimen/abc_alert_dialog_button_bar_height">
 
-            <ToggleButton
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/toggleButton"
-                android:textOn="Niño"
-                android:textOff="Niña"
-                android:textStyle="italic"
-                android:layout_below="@+id/textView6"
-                android:background="@drawable/boton_sexo"
-                android:checked="true" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="@string/Region"
+                    android:id="@+id/textView8"
+                    android:labelFor="@+id/imageButtonFlag" />
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    />
+
+                <ImageButton
+                    android:layout_width="@dimen/abc_alert_dialog_button_bar_height"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/imageButtonFlag"
+                    android:onClick="changeRegion"
+                    android:background="@drawable/flag_spain"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:id="@+id/layoutSex"
+                android:layout_below="@id/layoutRegion"
+                android:layout_marginTop="@dimen/abc_dialog_padding_material"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="@string/option_dialog_chooseSex"
+                    android:id="@+id/textView6"
+                    android:labelFor="@+id/toggleButton" />
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    />
+
+                <ToggleButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/toggleButton"
+                    android:textOn="Niño"
+                    android:textOff="Niña"
+                    android:textStyle="italic"
+                    android:background="@drawable/boton_sexo"
+                    android:checked="true" />
+            </LinearLayout>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -42,7 +82,7 @@
                 android:text="@string/option_dialog_chooseListSize"
                 android:id="@+id/textView7"
                 android:labelFor="@+id/seekBar"
-                android:layout_below="@+id/toggleButton"
+                android:layout_below="@+id/layoutSex"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 android:layout_marginTop="@dimen/abc_dialog_padding_material" />
