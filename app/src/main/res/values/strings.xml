@@ -37,4 +37,5 @@
     <string name="content_description_donate_paypal">Donar con Paypal</string>
     <string name="donate_dialog_vote_market">Votar en Market</string>
     <string name="Region">Región</string>
+    <string name="loading">cargando...</string>
 </resources>

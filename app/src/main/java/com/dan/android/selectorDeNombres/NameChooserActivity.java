@@ -1,12 +1,15 @@
 package com.dan.android.selectorDeNombres;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.LightingColorFilter;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
@@ -68,6 +71,13 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private Switch              mFastModeSwitch;
     private boolean             mFirstRun;
     private ImageButton         mRegionButton;
+    private ProgressDialog      mProgress;
+    private Context             mContext;
+    private final Item[]        items = {
+                                    new Item("España", R.mipmap.flag_spain),
+                                    new Item("U.S.", R.mipmap.flag_us),
+                                    //new Item("...", 0),//no icon for this one
+                                };
 
 
 
@@ -133,6 +143,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         mLayoutButtons  = (LinearLayout)findViewById(R.id.linearLayoutButtons);
         percentButton   = (FloatingActionButton)findViewById(R.id.porcentaje);
         mDb             = new DatabaseHelper(this);
+        mContext        = this;
 
         /*Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);*/
@@ -600,12 +611,6 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     }
 
     public void changeRegion(View view) {
-        final Item[] items = {
-                new Item("España", R.mipmap.flag_spain),
-                new Item("U.S.", R.mipmap.flag_us),
-                //new Item("...", 0),//no icon for this one
-        };
-
         ListAdapter adapter = new ArrayAdapter<Item>(
                 this,
                 android.R.layout.select_dialog_item,
@@ -628,16 +633,14 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         };
 
 
-        new AlertDialog.Builder(this)
+        new AlertDialog.Builder(mContext)
                 //.setTitle("Share Appliction")
                 .setAdapter(adapter, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int item) {
                         mRegionButton.setBackgroundResource(items[item].icon);
-                        mDb.loadDatabase(items[item].icon);
+                        new LoadDataBaseAsyncTask().execute(item);
                     }
                 }).show();
-
-
     }
 
     private static class Item{
@@ -650,6 +653,33 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         @Override
         public String toString() {
             return text;
+        }
+    }
+
+
+    private class LoadDataBaseAsyncTask extends AsyncTask<Integer, Void, Void>{
+        @Override
+        protected void onPreExecute() {
+            mProgress = new ProgressDialog(mContext);
+            mProgress.setIndeterminate(true);
+            mProgress.setMessage(getString(R.string.loading));
+            mProgress.setMax(100);
+            mProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            mProgress.setCancelable(false);
+            mProgress.show();
+        }
+
+        @Override
+        protected Void doInBackground(Integer... item) {
+            mDb.loadDatabase(items[item[0]].icon);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+
+            mProgress.dismiss();
         }
     }
 }
