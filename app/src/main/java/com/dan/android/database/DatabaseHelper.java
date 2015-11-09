@@ -9,17 +9,20 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 import android.widget.LinearLayout;
 
+import com.dan.android.selectordenombres.R;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-
+import java.util.Locale;
 
 
 public class DatabaseHelper extends SQLiteOpenHelper {
-    public static final String DATABASE_NAME       = "names.db";
-    //private static final String DATABASE_FILE   = "test.txt";
-    private static final String DATABASE_FILE   = "spanish.txt";
+    public static final String DATABASE_NAME        = "names.db";
+    //private static final String DATABASE_FILE     = "test.txt";
+    private static final String DATABASE_FILE_ES_ES = "spanish.txt";
+    private static final String DATABASE_FILE_EN_US = "en_us.txt";
     private String FEMALE_SYMBOL = "M";
     private String MALE_SYMBOL = "H";
     private static final int DATABASE_VERSION  = 5;
@@ -37,15 +40,46 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    @Override
-    public void onCreate(SQLiteDatabase sqLiteDatabase) {
+    private String getDatabaseFileName(){ return getDatabaseFileName(null);}
+    private String getDatabaseFileName(Integer icon){
+        String l;
+        String file;
+
+        if(icon == null) {
+            l = Locale.getDefault().toString();
+
+            file = DATABASE_FILE_ES_ES;
+            if (l.equals(Locale.US.toString())) {
+                file = DATABASE_FILE_EN_US;
+            }
+
+        } else {
+            switch (icon){
+                case R.mipmap.flag_us:
+                    file = DATABASE_FILE_EN_US;
+                    break;
+
+                default:
+                    file = DATABASE_FILE_ES_ES;
+                    break;
+            }
+        }
+
+        return file;
+    }
+
+
+    public void loadDatabase(int icon){ loadDatabase(getDatabaseFileName(icon)); }
+    public  void loadDatabase(String fileName){ loadDatabase(getWritableDatabase(), fileName);}
+    private void loadDatabase(SQLiteDatabase sqLiteDatabase, String fileName){
         BufferedReader br;
         String line=null;
         String[] tokens;
+
         ContentValues values = new ContentValues();
 
         try{
-            br = new BufferedReader(new InputStreamReader(mContext.getAssets().open(DATABASE_FILE)));
+            br = new BufferedReader(new InputStreamReader(mContext.getAssets().open(fileName)));
             sqLiteDatabase.beginTransaction();
 
             sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TablaNombres.TABLA);
@@ -71,6 +105,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         } finally {
             sqLiteDatabase.endTransaction();
         }
+    }
+
+
+    @Override
+    public void onCreate(SQLiteDatabase sqLiteDatabase) {
+        loadDatabase(sqLiteDatabase, getDatabaseFileName());
     }
 
 

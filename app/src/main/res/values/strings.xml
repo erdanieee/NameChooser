@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Name Finder</string>
+    <string name="app_name">Name finder</string>
     <string name="action_restart">Reiniciar</string>
     <string name="pref_userName">sp_userName</string>
     <string name="pref_numberOfButtons">sp_numberOfButtons</string>
@@ -36,4 +36,8 @@
     <string name="donate_dialog_vote">También puedes colaborar haciendo una valoración positiva en Google Play:</string>
     <string name="content_description_donate_paypal">Donar con Paypal</string>
     <string name="donate_dialog_vote_market">Votar en Market</string>
+    <string name="Region">Región</string>
+    <string name="loading">cargando...</string>
+    <string name="option_dialog_boy">niño</string>
+    <string name="option_dialog_girl">niña</string>
 </resources>

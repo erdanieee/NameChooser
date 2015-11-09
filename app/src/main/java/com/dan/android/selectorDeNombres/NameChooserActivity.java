@@ -1,12 +1,15 @@
 package com.dan.android.selectorDeNombres;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.LightingColorFilter;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
@@ -17,10 +20,13 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -67,6 +73,14 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private boolean             mFirstRun;
     private Long                mTotalCount=null;
     private ArrayList<Nombre>   mUndelete;
+    private ImageButton         mRegionButton;
+    private ProgressDialog      mProgress;
+    private Context             mContext;
+    private final Item[]        items = {
+                                    new Item("España", R.mipmap.flag_spain),
+                                    new Item("U.S.", R.mipmap.flag_us),
+                                    //new Item("...", 0),//no icon for this one
+                                };
 
 
 
@@ -133,6 +147,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         percentButton   = (FloatingActionButton)findViewById(R.id.porcentaje);
         mDb             = new DatabaseHelper(this);
         mUndelete       = new ArrayList<>();
+        mContext        = this;
 
         /*Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);*/
@@ -206,7 +221,8 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             mSeekBarConfig          = (SeekBar) promptView.findViewById(R.id.seekBar);
             mToggleButtonConfig     = (ToggleButton) promptView.findViewById(R.id.toggleButton);
             mExtendedModeSwitch     = (Switch) promptView.findViewById(R.id.switch1);
-
+            mRegionButton           = (ImageButton) promptView.findViewById(R.id.imageButtonFlag);
+            
             mToggleButtonConfig.setChecked(r.nextBoolean());
             mToggleButtonConfig.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
@@ -585,5 +601,78 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         ret = clicks ? totalClicks : totalVotes;
 
         return ret;
+    }
+
+    public void changeRegion(View view) {
+        ListAdapter adapter = new ArrayAdapter<Item>(
+                this,
+                android.R.layout.select_dialog_item,
+                android.R.id.text1,
+                items){
+            public View getView(int position, View convertView, ViewGroup parent) {
+                //Use super class to create the View
+                View v = super.getView(position, convertView, parent);
+                TextView tv = (TextView)v.findViewById(android.R.id.text1);
+
+                //Put the image on the TextView
+                tv.setCompoundDrawablesWithIntrinsicBounds(items[position].icon, 0, 0, 0);
+
+                //Add margin between image and text (support various screen densities)
+                int dp5 = (int) (5 * getResources().getDisplayMetrics().density + 0.5f);
+                tv.setCompoundDrawablePadding(dp5);
+
+                return v;
+            }
+        };
+
+
+        new AlertDialog.Builder(mContext)
+                //.setTitle("Share Appliction")
+                .setAdapter(adapter, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int item) {
+                        mRegionButton.setBackgroundResource(items[item].icon);
+                        new LoadDataBaseAsyncTask().execute(item);
+                    }
+                }).show();
+    }
+
+    private static class Item{
+        public final String text;
+        public final int icon;
+        public Item(String text, Integer icon) {
+            this.text = text;
+            this.icon = icon;
+        }
+        @Override
+        public String toString() {
+            return text;
+        }
+    }
+
+
+    private class LoadDataBaseAsyncTask extends AsyncTask<Integer, Void, Void>{
+        @Override
+        protected void onPreExecute() {
+            mProgress = new ProgressDialog(mContext);
+            mProgress.setIndeterminate(true);
+            mProgress.setMessage(getString(R.string.loading));
+            mProgress.setMax(100);
+            mProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            mProgress.setCancelable(false);
+            mProgress.show();
+        }
+
+        @Override
+        protected Void doInBackground(Integer... item) {
+            mDb.loadDatabase(items[item[0]].icon);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+            updateTextViewNumberOfNames();
+            mProgress.dismiss();
+        }
     }
 }
