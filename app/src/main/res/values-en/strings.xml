@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Name finder</string>
     <string name="action_restart">Restart</string>
     <string name="text_select_name">Select the preferred name from the list:</string>
     <string name="Donate_string">Donate</string>
