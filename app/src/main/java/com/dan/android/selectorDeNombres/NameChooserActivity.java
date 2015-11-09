@@ -678,7 +678,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         @Override
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
-
+            updateTextViewNumberOfNames();
             mProgress.dismiss();
         }
     }
