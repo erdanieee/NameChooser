@@ -10,16 +10,18 @@
     <string name="end_dialog_title">¡Finished!</string>
     <string name="end_dialog_winnerName">The name with highest score is</string>
     <string name="end_dialog_startAgain">. Click OK to start again</string>
-    <string name="welcome_dialog_title">Thank yo for installing this application</string>
-    <string name="welcome_dialog_msg">This application is absolutely free: there isn't any PRO version, it hasn't publicity and it doesn't need special permissions. If it like to you and you think it's useful, contribute voting in the Market</string>
+    <string name="welcome_dialog_title">Thank you for installing this application</string>
+    <string name="welcome_dialog_msg">This application is absolutely free: there isn\'t any PRO version, it hasn\'t publicity and it does\'nt need special permissions. If it like to you and you think it\'s useful, contribute by voting in the Market</string>
     <string name="donate_dialog_title">Thanks for using this application</string>
     <string name="option_dialog_chooseSex">¿Boy or girl?</string>
     <string name="option_dialog_chooseListSize">Use the sliding bar to select the database size</string>
     <string name="option_dialog_choseMode">Fast mode</string>
-    <string name="donate_dialog_donate">If it like you and you think it's useful, you can use the button below to invite me to a coffee and help me with the development of other free applications like this one :)</string>
-    <string name="donate_dialog_vote">You can also contribute giving me 5 starts on Google Play:</string>
+    <string name="donate_dialog_donate">If it like you and you think it\'s useful, you can use the button below to invite me to a coffee and help me with the development of other free applications like this one :)</string>
+    <string name="donate_dialog_vote">You can also contribute giving me 5 stars on Google Play:</string>
     <string name="content_description_donate_paypal">Donate with Paypal</string>
     <string name="donate_dialog_vote_market">Vote on the Market</string>
     <string name="Region">Zone</string>
     <string name="loading">loading…</string>
+    <string name="option_dialog_boy">boy</string>
+    <string name="option_dialog_girl">girl</string>
 </resources>

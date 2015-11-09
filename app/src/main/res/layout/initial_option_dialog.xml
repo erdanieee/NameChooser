@@ -68,8 +68,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/toggleButton"
-                    android:textOn="Niño"
-                    android:textOff="Niña"
+                    android:textOn="@string/option_dialog_boy"
+                    android:textOff="@string/option_dialog_girl"
                     android:textStyle="italic"
                     android:background="@drawable/boton_sexo"
                     android:checked="true" />
