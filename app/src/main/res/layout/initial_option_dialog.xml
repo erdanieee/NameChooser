@@ -39,7 +39,7 @@
                     android:layout_height="wrap_content"
                     android:id="@+id/imageButtonFlag"
                     android:onClick="changeRegion"
-                    android:background="@drawable/flag_spain"/>
+                    android:background="@mipmap/flag_spain"/>
             </LinearLayout>
 
             <LinearLayout
