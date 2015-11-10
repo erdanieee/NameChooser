@@ -25,67 +25,76 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_FILE_EN_US = "en_us.txt";
     private String FEMALE_SYMBOL = "M";
     private String MALE_SYMBOL = "H";
-    private static final int DATABASE_VERSION  = 5;
+    private static final int DATABASE_VERSION   = 7;
+    private static final int DEFAULT_FLAG       = 0;
     private Context mContext;
-
-
+    private Integer mCurrentFlag = null;
 
     public enum SEXO { MALE, FEMALE}
 
+    public final int[] FLAG_ICONS =    {    R.mipmap.flag_es,   R.mipmap.flag_us    };
+    public final String[] FLAG_NAMES = {    "España",           "U.S."              };
+    public final String[] FLAG_DBs =   {    "spanish.txt",      "en_us.txt"         };
 
-    public DatabaseHelper(Context contexto){
-        super(contexto, DATABASE_NAME, null, DATABASE_VERSION);
+    public int getCurrentFlagIcon(){    return FLAG_ICONS[getCurrentFlag()]; }
+    public String getCurrentFlagName(){ return FLAG_NAMES[getCurrentFlag()]; }
+    public String getCurrentFlagDb(){   return FLAG_DBs[getCurrentFlag()];   }
 
-        mContext = contexto;
-    }
+    private int getCurrentFlag() {
+        if (mCurrentFlag==null) {
+            Cursor c;
 
+            c = getReadableDatabase().query(TablaDb.TABLA, null, null, null, null, null, null, null);
 
-    private String getDatabaseFileName(){ return getDatabaseFileName(null);}
-    private String getDatabaseFileName(Integer icon){
-        String l;
-        String file;
-
-        if(icon == null) {
-            l = Locale.getDefault().toString();
-
-            file = DATABASE_FILE_ES_ES;
-            if (l.equals(Locale.US.toString())) {
-                file = DATABASE_FILE_EN_US;
-            }
-
-        } else {
-            switch (icon){
-                case R.mipmap.flag_us:
-                    file = DATABASE_FILE_EN_US;
-                    break;
-
-                default:
-                    file = DATABASE_FILE_ES_ES;
-                    break;
-            }
+            c.moveToNext();
+            mCurrentFlag = c.getInt(0);
         }
 
-        return file;
+        return mCurrentFlag;
     }
 
 
-    public void loadDatabase(int icon){ loadDatabase(getDatabaseFileName(icon)); }
-    public  void loadDatabase(String fileName){ loadDatabase(getWritableDatabase(), fileName);}
-    private void loadDatabase(SQLiteDatabase sqLiteDatabase, String fileName){
+    public void setCurrentFlag(SQLiteDatabase db){
+        String l;
+        int item;
+
+        l    = Locale.getDefault().toString();
+
+        if (l.equals("es_ES")) {
+            item = 0;
+
+        } else if (l.equals(Locale.US.toString())) {
+            item = 1;
+
+        } else {
+            item = DEFAULT_FLAG;
+        }
+
+        setCurrentFlag(db, item);
+    }
+    public void setCurrentFlag(Integer item) { setCurrentFlag(getWritableDatabase(), item);}
+    public void setCurrentFlag(SQLiteDatabase db, Integer item){
         BufferedReader br;
         String line=null;
         String[] tokens;
+        ContentValues values;
 
-        ContentValues values = new ContentValues();
+        mCurrentFlag    = item;
+        values          = new ContentValues();
 
         try{
-            br = new BufferedReader(new InputStreamReader(mContext.getAssets().open(fileName)));
-            sqLiteDatabase.beginTransaction();
-
-            sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TablaNombres.TABLA);
-
             Log.i(this.getClass().getSimpleName(), "Creando nueva base de datos");
-            sqLiteDatabase.execSQL(TablaNombres.sqlCreateTableContactos);
+
+            br = new BufferedReader(new InputStreamReader(mContext.getAssets().open(getCurrentFlagDb())));
+            db.beginTransaction();
+
+            db.execSQL("DROP TABLE IF EXISTS " + TablaDb.TABLA);
+            db.execSQL(TablaDb.sqlCreateTableDb);
+            values.put(TablaDb.COL_ZONE, getCurrentFlag());
+            db.insert(TablaDb.TABLA, null, values);
+
+            db.execSQL("DROP TABLE IF EXISTS " + TablaNombres.TABLA);
+            db.execSQL(TablaNombres.sqlCreateTableContactos);
 
             while((line=br.readLine())!=null){
                 tokens = line.split("\t");
@@ -95,22 +104,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 values.put(TablaNombres.COL_SEXO, tokens[1]);
                 values.put(TablaNombres.COL_FRECUENCIA, tokens[2]);
 
-                sqLiteDatabase.insert(TablaNombres.TABLA, null, values);
+                db.insert(TablaNombres.TABLA, null, values);
             }
-            sqLiteDatabase.setTransactionSuccessful();
+            db.setTransactionSuccessful();
 
         } catch (IOException e) {
             e.printStackTrace();
 
         } finally {
-            sqLiteDatabase.endTransaction();
+            db.endTransaction();
         }
     }
 
 
+    public DatabaseHelper(Context contexto){
+        super(contexto, DATABASE_NAME, null, DATABASE_VERSION);
+
+        mContext = contexto;
+    }
+
+
     @Override
-    public void onCreate(SQLiteDatabase sqLiteDatabase) {
-        loadDatabase(sqLiteDatabase, getDatabaseFileName());
+    public void onCreate(SQLiteDatabase db) {
+        setCurrentFlag(db);
     }
 
 

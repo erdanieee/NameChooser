@@ -76,11 +76,6 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     private ImageButton         mRegionButton;
     private ProgressDialog      mProgress;
     private Context             mContext;
-    private final Item[]        items = {
-                                    new Item("España", R.mipmap.flag_spain),
-                                    new Item("U.S.", R.mipmap.flag_us),
-                                    //new Item("...", 0),//no icon for this one
-                                };
 
 
 
@@ -163,7 +158,35 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         getPreferences();
 
         if(mContinueSearch){
-            nextRound(null, true);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+            // setup a dialog window
+            builder
+                    .setMessage(getResources().getString(R.string.UI_continue_msg))
+                    .setIcon(android.R.drawable.ic_dialog_info)
+                    .setPositiveButton(getResources().getString(R.string.UI_continue_button), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            nextRound(null, true);
+                            dialog.dismiss();
+                        }
+                    })
+                    .setNegativeButton(getResources().getString(R.string.UI_action_restart), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            showConfigDialog();
+                            dialog.dismiss();
+                        }
+                    })
+                    .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                        @Override
+                        public void onCancel(DialogInterface dialog) {
+                            showConfigDialog();
+                            dialog.dismiss();
+                        }
+                    });
+
+            builder.create().show();
 
         } else {
             showConfigDialog();
@@ -198,6 +221,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         editor.putLong(getString(R.string.pref_totalVotesDone), pref_totalVotacionesHechas);
         editor.putFloat(getString(R.string.pref_totalVotesNeeded), pref_totalVotacionesNecesarias);
         editor.putBoolean(getString(R.string.pref_fastMode), mFastMode);
+        editor.putBoolean(getString(R.string.pref_continueSearch), mContinueSearch);
         editor.apply();
 
         mDb.close();
@@ -222,6 +246,8 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
             mToggleButtonConfig     = (ToggleButton) promptView.findViewById(R.id.toggleButton);
             mExtendedModeSwitch     = (Switch) promptView.findViewById(R.id.switch1);
             mRegionButton           = (ImageButton) promptView.findViewById(R.id.imageButtonFlag);
+
+            mRegionButton.setBackgroundResource(mDb.getCurrentFlagIcon());
             
             mToggleButtonConfig.setChecked(r.nextBoolean());
             mToggleButtonConfig.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -253,7 +279,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
             builder.setView(promptView);
             builder
-                    .setTitle(getResources().getString(R.string.configuration_title))
+                    .setTitle(getResources().getString(R.string.UI_configuration_title))
                     .setIcon(android.R.drawable.ic_dialog_info)
                     .setOnCancelListener(new DialogInterface.OnCancelListener() {
                         @Override
@@ -345,7 +371,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
+        // Inflate the menu; this adds flags to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_name_chooser, menu);
         return true;
     }
@@ -402,52 +428,53 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         Nombre n;
         float maxScore;
 
-        //comprueba si se ha terminado
-        if (getNumberOfNamesUsed() <= DEFAULT_REMAINING_NAMES_TO_END) {
-            percentButton.setImageDrawable(new TextDrawable("100%", this));
-            showEndDialog(mDb.getHighestScoreName().nombre);
+        if(first) {
+            mContinueSearch = true;
+            updateNumberOfNamesUsed();
+            updateNumberOfButtons();
+            updateNumberOfNamesForCountRound();
             mUndelete.clear();
 
         } else {
-            if(first) {
-                mContinueSearch = true;
+            pref_totalVotacionesHechas += getNumberOfButtons();
+
+            mDb.raiseCount(mLayoutButtons);
+
+            maxScore = 0;
+            for (int i = 0; i < mLayoutButtons.getChildCount(); i++) {
+                n = (Nombre) mLayoutButtons.getChildAt(i).getTag();
+
+                if (n.score > maxScore) {
+                    maxScore = n.score;
+                }
+            }
+            if (v != null) {
+                mDb.updateScore((Nombre) v.getTag(), maxScore + (1 / (float) getNumberOfButtons()));
+            }
+
+            setNumberOfNamesForCountRound(getNumberOfNamesForCountRound() - getNumberOfButtons());
+            if (getNumberOfNamesForCountRound() <= 0) {
+                mDb.unUseLastNNamesByScore((int) Math.floor(getNumberOfNamesUsed() - (float) getNumberOfNamesUsed() / (mFastMode ? getNumberOfButtons() : 2)));
                 updateNumberOfNamesUsed();
                 updateNumberOfButtons();
                 updateNumberOfNamesForCountRound();
-                mUndelete.clear();
-
-            } else {
-                pref_totalVotacionesHechas += getNumberOfButtons();
-
-                mDb.raiseCount(mLayoutButtons);
-
-                maxScore = 0;
-                for (int i = 0; i < mLayoutButtons.getChildCount(); i++) {
-                    n = (Nombre) mLayoutButtons.getChildAt(i).getTag();
-
-                    if (n.score > maxScore) {
-                        maxScore = n.score;
-                    }
-                }
-                if (v != null) {
-                    mDb.updateScore((Nombre) v.getTag(), maxScore + (1 / (float) getNumberOfButtons()));
-                }
-
-                setNumberOfNamesForCountRound(getNumberOfNamesForCountRound() - getNumberOfButtons());
-                if (getNumberOfNamesForCountRound() <= 0) {
-                    mDb.unUseLastNNamesByScore((int) Math.floor(getNumberOfNamesUsed() - (float) getNumberOfNamesUsed() / (mFastMode ? getNumberOfButtons() : 2)));
-                    updateNumberOfNamesUsed();
-                    updateNumberOfButtons();
-                    updateNumberOfNamesForCountRound();
-                }
-
-                //save buttons for undelete
-                mUndelete.clear();
-                for (int i = 0; i < mLayoutButtons.getChildCount(); i++) {
-                    mUndelete.add((Nombre) mLayoutButtons.getChildAt(i).getTag());
-                }
             }
 
+            //save buttons for undelete
+            mUndelete.clear();
+            for (int i = 0; i < mLayoutButtons.getChildCount(); i++) {
+                mUndelete.add((Nombre) mLayoutButtons.getChildAt(i).getTag());
+            }
+        }
+
+        //comprueba si se ha terminado
+        if (getNumberOfNamesUsed() <= DEFAULT_REMAINING_NAMES_TO_END) {
+            showEndDialog(mDb.getHighestScoreName().nombre);
+            percentButton.setImageDrawable(new TextDrawable("100%", this));
+            mUndelete.clear();
+            mContinueSearch = false;
+
+        } else {
             percentButton.setImageDrawable(new TextDrawable(String.valueOf(
                     (int) Math.floor(100 * pref_totalVotacionesHechas / pref_totalVotacionesNecesarias)
             ) + "%", this));
@@ -483,8 +510,8 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         // setup a dialog window
         builder
-                .setTitle(getResources().getString(R.string.end_dialog_title))
-                .setMessage(getResources().getString(R.string.end_dialog_winnerName) + " " + winnerName + getResources().getString(R.string.end_dialog_startAgain))
+                .setTitle(getResources().getString(R.string.UI_end_dialog_title))
+                .setMessage(getResources().getString(R.string.UI_end_dialog_winnerName) + " " + winnerName + getResources().getString(R.string.UI_end_dialog_startAgain))
                         .setIcon(android.R.drawable.ic_dialog_info)
                         .setCancelable(false)
                         .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
@@ -504,9 +531,9 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         // setup a dialog window
         builder
-                .setTitle(getResources().getString(R.string.welcome_dialog_title))
+                .setTitle(getResources().getString(R.string.UI_welcome_dialog_title))
                 .setIcon(android.R.drawable.ic_dialog_info)
-                .setMessage(getResources().getString(R.string.welcome_dialog_msg))
+                .setMessage(getResources().getString(R.string.UI_welcome_dialog_msg))
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -547,7 +574,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         builder.setView(promptView);
         builder
-                .setTitle(getResources().getString(R.string.donate_dialog_title))
+                .setTitle(getResources().getString(R.string.UI_donate_dialog_title))
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
@@ -555,7 +582,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                         showConfigDialog();
                     }
                 })
-                .setPositiveButton(getResources().getString(R.string.noThanks), new DialogInterface.OnClickListener() {
+                .setPositiveButton(getResources().getString(R.string.UI_noThanks), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         showConfigDialog();
@@ -604,18 +631,18 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
     }
 
     public void changeRegion(View view) {
-        ListAdapter adapter = new ArrayAdapter<Item>(
+        ListAdapter adapter = new ArrayAdapter<String>(
                 this,
                 android.R.layout.select_dialog_item,
                 android.R.id.text1,
-                items){
+                mDb.FLAG_NAMES){
             public View getView(int position, View convertView, ViewGroup parent) {
                 //Use super class to create the View
                 View v = super.getView(position, convertView, parent);
                 TextView tv = (TextView)v.findViewById(android.R.id.text1);
 
                 //Put the image on the TextView
-                tv.setCompoundDrawablesWithIntrinsicBounds(items[position].icon, 0, 0, 0);
+                tv.setCompoundDrawablesWithIntrinsicBounds(mDb.FLAG_ICONS[position], 0, 0, 0);
 
                 //Add margin between image and text (support various screen densities)
                 int dp5 = (int) (5 * getResources().getDisplayMetrics().density + 0.5f);
@@ -630,23 +657,10 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
                 //.setTitle("Share Appliction")
                 .setAdapter(adapter, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int item) {
-                        mRegionButton.setBackgroundResource(items[item].icon);
+                        mRegionButton.setBackgroundResource(mDb.FLAG_ICONS[item]);
                         new LoadDataBaseAsyncTask().execute(item);
                     }
                 }).show();
-    }
-
-    private static class Item{
-        public final String text;
-        public final int icon;
-        public Item(String text, Integer icon) {
-            this.text = text;
-            this.icon = icon;
-        }
-        @Override
-        public String toString() {
-            return text;
-        }
     }
 
 
@@ -655,7 +669,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
         protected void onPreExecute() {
             mProgress = new ProgressDialog(mContext);
             mProgress.setIndeterminate(true);
-            mProgress.setMessage(getString(R.string.loading));
+            mProgress.setMessage(getString(R.string.UI_loading));
             mProgress.setMax(100);
             mProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             mProgress.setCancelable(false);
@@ -664,7 +678,7 @@ public class NameChooserActivity extends AppCompatActivity implements View.OnCli
 
         @Override
         protected Void doInBackground(Integer... item) {
-            mDb.loadDatabase(items[item[0]].icon);
+            mDb.setCurrentFlag(item[0]);
             return null;
         }
 
