@@ -33,7 +33,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public enum SEXO { MALE, FEMALE}
 
     public final int[] FLAG_ICONS =    {    R.mipmap.flag_es,   R.mipmap.flag_us    };
-    public final String[] FLAG_NAMES = {    "España",           "U.S."              };
+    public final String[] FLAG_NAMES = {    "España",           "EEUU"              };
     public final String[] FLAG_DBs =   {    "spanish.txt",      "en_us.txt"         };
 
     public int getCurrentFlagIcon(){    return FLAG_ICONS[getCurrentFlag()]; }
