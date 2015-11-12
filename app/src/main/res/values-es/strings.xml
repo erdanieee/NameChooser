@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="UI_action_restart">Reiniciar</string>
+    <string name="UI_text_select_name">Selecciona de los siguientes nombres el que más te gusta:</string>
+    <string name="UI_donate_string">Donar</string>
+    <string name="UI_votar">Votar</string>
+    <string name="UI_noThanks">No, gracias</string>
+    <string name="UI_configuration_title">Configuración</string>
+    <string name="UI_end_dialog_title">¡Terminaste!</string>
+    <string name="UI_end_dialog_winnerName">El nombre que has elegido es </string>
+    <string name="UI_end_dialog_startAgain">. Pulsa aceptar para volver a empezar</string>
+    <string name="UI_welcome_dialog_title">Gracias por instalar la aplicación</string>
+    <string name="UI_welcome_dialog_msg">Esta aplicación es totalmente gratuita: no incluye publicidad y no necesita permisos especiales. Si te gusta y crees que es útil, colabora dejando una valoración positiva en el Market</string>
+    <string name="UI_donate_dialog_title">Gracias por utilizar la aplicación</string>
+    <string name="UI_option_dialog_chooseSex">¿Niño o niña?</string>
+    <string name="UI_option_dialog_chooseListSize">Desplaza la barra deslizante inferior hacia la derecha para incluir nombres poco comunes o regionales</string>
+    <string name="UI_option_dialog_choseMode">Modo extendido</string>
+    <string name="UI_donate_dialog_donate">Si te ha gustado y te ha parecido útil, puedes utilizar el botón inferior para invitarme a un café y ayudar al desarrollo de otras aplicaciones gratuitas y sin publicidad como esta :)</string>
+    <string name="UI_donate_dialog_vote">También puedes colaborar haciendo una valoración positiva en Google Play:</string>
+    <string name="UI_content_description_donate_paypal">Donar con Paypal</string>
+    <string name="UI_donate_dialog_vote_market">Votar en Market</string>
+    <string name="UI_region">País/Región</string>
+    <string name="UI_loading">cargando…</string>
+    <string name="UI_option_dialog_boy">niño</string>
+    <string name="UI_option_dialog_girl">niña</string>
+    <string name="UI_continue_msg">Se cerró la aplicación sin terminar, ¿deseas continuar la búsqueda anterior?</string>
+    <string name="UI_continue_button">Continuar</string>
+</resources>
