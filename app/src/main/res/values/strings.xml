@@ -19,21 +19,21 @@
     <string name="pref_fastMode">pref_ultraFastMode</string>
 
     <string name="UI_action_restart">Restart</string>
-    <string name="UI_text_select_name">Select your preferred name from the list:</string>
+    <string name="UI_text_select_name">Select your preferred name:</string>
     <string name="UI_donate_string">Donate</string>
     <string name="UI_votar">Vote</string>
     <string name="UI_noThanks">No, thanks</string>
     <string name="UI_configuration_title">Settings</string>
     <string name="UI_end_dialog_title">¡Done!</string>
-    <string name="UI_end_dialog_winnerName">The name with the highest score is</string>
-    <string name="UI_end_dialog_startAgain">. Click OK to start again</string>
+    <string name="UI_end_dialog_winnerName">Your preferred name is</string>
+    <string name="UI_end_dialog_startAgain">. Click OK to start again.</string>
     <string name="UI_welcome_dialog_title">Thanks for installing this application</string>
-    <string name="UI_welcome_dialog_msg">This application is absolutely free: there isn\'t any PRO version, it doesn\'t shows ads and it doesn\'t need special permissions. If you enjoyed using this application and you think it\'s useful, contribute by voting it in the Market</string>
+    <string name="UI_welcome_dialog_msg">This application is absolutely free: it doesn\'t shows ads and it doesn\'t need special permissions. If you enjoyed using this application and you think it\'s useful, contribute by voting it in the Market</string>
     <string name="UI_donate_dialog_title">Thanks for using this application</string>
     <string name="UI_option_dialog_chooseSex">¿Boy or girl?</string>
     <string name="UI_option_dialog_chooseListSize">Use the sliding bar to select the database size</string>
     <string name="UI_option_dialog_choseMode">Fast mode</string>
-    <string name="UI_donate_dialog_donate">If enjoyned the application and you think it\'s useful, you can use the button below to invite me to a coffee and help me with the development of other free applications like this one :)</string>
+    <string name="UI_donate_dialog_donate">If enjoyned this application and you think it\'s useful, you can use the button below to invite me to a coffee and help me with the development of other free applications like this one :)</string>
     <string name="UI_donate_dialog_vote">You can also contribute giving me 5 stars on Google Play:</string>
     <string name="UI_content_description_donate_paypal">Donate with Paypal</string>
     <string name="UI_donate_dialog_vote_market">Vote on the Market</string>
